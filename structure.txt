@@ -1,0 +1,54 @@
+├── app
+│   ├── (auth)
+│   │   ├── _layout.tsx          # Auth stack layout
+│   │   ├── login.tsx             # Login screen
+│   │   └── forgot-password.tsx   # Optional
+│   ├── (protected)
+│   │   ├── _layout.tsx           # Protected layout with auth check
+│   │   ├── (tabs)
+│   │   │   ├── _layout.tsx       # Bottom tabs
+│   │   │   ├── pos.tsx           # POS/Sales screen
+│   │   │   ├── products.tsx      # Products management
+│   │   │   ├── orders.tsx        # Orders history
+│   │   │   └── settings.tsx      # Settings/Profile
+│   │   └── product-details/[id].tsx  # Example detail screen
+│   ├── _layout.tsx               # Root layout with providers
+│   └── +not-found.tsx
+├── src
+│   ├── api
+│   │   ├── client.ts             # Axios instance with interceptors
+│   │   ├── endpoints.ts          # API endpoint constants
+│   │   └── services
+│   │       ├── auth.service.ts
+│   │       ├── products.service.ts
+│   │       └── orders.service.ts
+│   ├── store
+│   │   ├── index.ts              # Redux/Zustand store setup
+│   │   ├── slices
+│   │   │   ├── auth.slice.ts
+│   │   │   ├── products.slice.ts
+│   │   │   └── cart.slice.ts
+│   │   └── hooks.ts              # Typed hooks
+│   ├── contexts
+│   │   └── AuthContext.tsx       # If using Context API instead
+│   ├── hooks
+│   │   ├── useAuth.ts
+│   │   ├── useProtectedRoute.ts
+│   │   └── useAPI.ts
+│   ├── types
+│   │   ├── auth.types.ts
+│   │   ├── product.types.ts
+│   │   └── api.types.ts
+│   ├── utils
+│   │   ├── storage.ts            # Secure storage helper
+│   │   ├── validators.ts
+│   │   └── formatters.ts
+│   └── constants
+│       ├── config.ts             # API URLs, constants
+│       └── theme.ts
+├── components
+│   ├── ui                        # Your existing UI components
+│   └── common
+│       ├── LoadingScreen.tsx
+│       └── ErrorBoundary.tsx
+└── assets
