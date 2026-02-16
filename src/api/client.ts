@@ -1,8 +1,8 @@
 import { API_BASE_URL } from "@/constants/config";
 import { emitUnauthorized } from "@/utils/auth-events";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -15,7 +15,7 @@ const apiClient = axios.create({
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await SecureStore.getItemAsync("accessToken");
+    const token = await AsyncStorage.getItem("accessToken");
     console.log("token", token);
 
     if (token && config.headers) {
@@ -32,8 +32,8 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Clear auth data
-      await SecureStore.deleteItemAsync("accessToken");
-      await SecureStore.deleteItemAsync("refreshToken");
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("refreshToken");
 
       // Tell the app that we're unauthorized so the auth store can update
       emitUnauthorized();

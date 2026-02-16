@@ -567,7 +567,11 @@ const styles = StyleSheet.create({
   conversionText: { fontSize: 14, color: "#007AFF", fontWeight: "500" },
 
   /* pagination */
-  paginationContainer: { marginTop: 12, alignItems: "center" },
+  paginationContainer: {
+    marginTop: 12,
+    alignItems: "center",
+    marginBottom: 50,
+  },
   paginationInfo: { fontSize: 13, color: "#6b7280", marginBottom: 8 },
   loadMoreButton: {
     backgroundColor: Colors.light.primary,

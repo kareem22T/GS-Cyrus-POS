@@ -45,6 +45,11 @@ export default function LoginScreen() {
           error.message ||
           "بيانات الدخول غير صحيحة",
       );
+      console.log(
+        error.response?.data?.message ||
+          error.message ||
+          "بيانات الدخول غير صحيحة",
+      );
     } finally {
       setLoading(false);
     }

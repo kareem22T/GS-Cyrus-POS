@@ -1,5 +1,5 @@
 import apiClient from "@/api/client";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 
 interface User {
@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       // Store token securely
-      await SecureStore.setItemAsync("accessToken", token);
+      await AsyncStorage.setItem("accessToken", token);
 
       set({ user, isAuthenticated: true });
     } catch (error) {
@@ -54,14 +54,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     // Clear local data regardless of API call success
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
+    await AsyncStorage.removeItem("accessToken");
+    await AsyncStorage.removeItem("refreshToken");
     set({ user: null, isAuthenticated: false });
   },
 
   checkAuth: async () => {
     try {
-      const token = await SecureStore.getItemAsync("accessToken");
+      const token = await AsyncStorage.getItem("accessToken");
       if (!token) {
         set({ isAuthenticated: false, isLoading: false });
         return;
