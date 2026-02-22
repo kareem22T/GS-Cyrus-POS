@@ -48,6 +48,15 @@ export default function TabsLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="fawry-settings"
+          options={{
+            title: "ربط فوري",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="card" size={size} color={color} />
+            ),
+          }}
+        />
 
         {/* Replaced branches with products-report */}
         <Tabs.Screen
@@ -56,6 +65,16 @@ export default function TabsLayout() {
             title: "تقرير المنتجات",
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="bar-chart" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: "الإعدادات",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="settings" size={size} color={color} />
             ),
           }}
         />

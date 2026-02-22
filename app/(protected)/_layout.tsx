@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/store/slices/auth.slice";
 import { Redirect, Stack } from "expo-router";
 import LoadingScreen from "../../components/common/LoadingScreen";
+import { FawryAutoConnect } from "../../components/FawryAutoConnect";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -14,8 +15,11 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <>
+      <FawryAutoConnect />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </>
   );
 }

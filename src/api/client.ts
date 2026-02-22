@@ -2,7 +2,6 @@ import { API_BASE_URL } from "@/constants/config";
 import { emitUnauthorized } from "@/utils/auth-events";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { router } from "expo-router";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -38,8 +37,7 @@ apiClient.interceptors.response.use(
       // Tell the app that we're unauthorized so the auth store can update
       emitUnauthorized();
 
-      // Redirect to login (UI + layouts will now see isAuthenticated = false)
-      router.replace("/(auth)/login");
+      // Redirect handled by ProtectedLayout when auth state updates
     }
     return Promise.reject(error);
   },

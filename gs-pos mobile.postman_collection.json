@@ -1,0 +1,2483 @@
+{
+  "info": {
+    "_postman_id": "db0293dd-0c31-4dad-bd44-64acec45e221",
+    "name": "gs-pos mobile",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "44367257",
+    "_collection_link": "https://go.postman.co/collection/44367257-db0293dd-0c31-4dad-bd44-64acec45e221?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "v2",
+      "item": [
+        {
+          "name": "PosProducts",
+          "item": [
+            {
+              "name": "Get All Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/products?PageSize=50&SortBy=Price&SortDescending=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "PageNumber",
+                      "value": "1",
+                      "disabled": true
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "50"
+                    },
+                    {
+                      "key": "SortBy",
+                      "value": "Price"
+                    },
+                    {
+                      "key": "SortDescending",
+                      "value": "true"
+                    }
+                  ]
+                },
+                "description": "StartFragment\n\n- **Search**: You can now search by product name or SKU using the `search` query parameter.\n    \n- **Sorting**: I added support for dynamic sorting by `Name`, `Sku`, `Price`, and `Category`.\n    \n\nExamples:\n\n- `GET /api/pos/products?search=coffee&sortBy=Price&sortDescending=true`"
+              },
+              "response": [
+                {
+                  "name": "Get All Products",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/products?SortBy=Price&SortDescending=true",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "products"
+                      ],
+                      "query": [
+                        {
+                          "key": "PageNumber",
+                          "value": "1",
+                          "disabled": true
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "1",
+                          "disabled": true
+                        },
+                        {
+                          "key": "SortBy",
+                          "value": "Price"
+                        },
+                        {
+                          "key": "SortDescending",
+                          "value": "true"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 07:57:04 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"pagination\": {\n        \"currentPage\": 1,\n        \"totalPages\": 1,\n        \"pageSize\": 10,\n        \"totalCount\": 5,\n        \"hasPrevious\": false,\n        \"hasNext\": false\n    },\n    \"messages\": [],\n    \"succeeded\": true,\n    \"data\": [\n        {\n            \"id\": 108,\n            \"companyId\": 1,\n            \"name\": \"مبرد موبيل 4لتر\",\n            \"description\": \"مبرد موبيل 4لتر\\r\\n\",\n            \"price\": 500,\n            \"taxGroupId\": 4,\n            \"taxGroupName\": \"قيمة مضافة 14%\",\n            \"unitId\": 6,\n            \"unitName\": \"EA - EA\",\n            \"sku\": \"EG-256852464-MO26\",\n            \"companyName\": null,\n            \"branchCount\": 0,\n            \"productCategoryId\": 11,\n            \"categoryName\": \"زيوت - موبيل\",\n            \"isActive\": true,\n            \"branchIds\": [],\n            \"isTaxable\": true,\n            \"taxRate\": 14\n        },\n        {\n            \"id\": 80,\n            \"companyId\": 1,\n            \"name\": \"بنزين 95\",\n            \"description\": \"بنزين 95\",\n            \"price\": 21,\n            \"taxGroupId\": null,\n            \"taxGroupName\": null,\n            \"unitId\": 5,\n            \"unitName\": \"LTR - LTR\",\n            \"sku\": \"EG-256852464-MF95\",\n            \"companyName\": null,\n            \"branchCount\": 0,\n            \"productCategoryId\": 12,\n            \"categoryName\": \"وقود - موبيل\",\n            \"isActive\": true,\n            \"branchIds\": [],\n            \"isTaxable\": false,\n            \"taxRate\": 0\n        },\n        {\n            \"id\": 79,\n            \"companyId\": 1,\n            \"name\": \"بنزين 92\",\n            \"description\": \"بنزين 92\\r\\n\",\n            \"price\": 19.25,\n            \"taxGroupId\": null,\n            \"taxGroupName\": null,\n            \"unitId\": 5,\n            \"unitName\": \"LTR - LTR\",\n            \"sku\": \"EG-256852464-MF92\",\n            \"companyName\": null,\n            \"branchCount\": 0,\n            \"productCategoryId\": 12,\n            \"categoryName\": \"وقود - موبيل\",\n            \"isActive\": true,\n            \"branchIds\": [],\n            \"isTaxable\": false,\n            \"taxRate\": 0\n        },\n        {\n            \"id\": 81,\n            \"companyId\": 1,\n            \"name\": \"بنزين 80\",\n            \"description\": \"بنزين 80\",\n            \"price\": 17.75,\n            \"taxGroupId\": null,\n            \"taxGroupName\": null,\n            \"unitId\": 5,\n            \"unitName\": \"LTR - LTR\",\n            \"sku\": \"EG-256852464-MF80\",\n            \"companyName\": null,\n            \"branchCount\": 0,\n            \"productCategoryId\": 12,\n            \"categoryName\": \"وقود - موبيل\",\n            \"isActive\": true,\n            \"branchIds\": [],\n            \"isTaxable\": false,\n            \"taxRate\": 0\n        },\n        {\n            \"id\": 82,\n            \"companyId\": 1,\n            \"name\": \"سولار\",\n            \"description\": \"سولار\",\n            \"price\": 17.5,\n            \"taxGroupId\": null,\n            \"taxGroupName\": null,\n            \"unitId\": 5,\n            \"unitName\": \"LTR - LTR\",\n            \"sku\": \"EG-256852464-MFD1\",\n            \"companyName\": null,\n            \"branchCount\": 0,\n            \"productCategoryId\": 12,\n            \"categoryName\": \"وقود - موبيل\",\n            \"isActive\": true,\n            \"branchIds\": [],\n            \"isTaxable\": false,\n            \"taxRate\": 0\n        }\n    ],\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Product",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/products/:productId",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "products",
+                    ":productId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "productId",
+                      "value": "108"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/products/:productId",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "products",
+                        ":productId"
+                      ],
+                      "variable": [
+                        {
+                          "key": "productId",
+                          "value": "64"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/problem+json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 07:59:31 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.5\",\n    \"title\": \"Not Found\",\n    \"status\": 404,\n    \"traceId\": \"00-62e13b101068a240f5762e40187a9e54-864872a64612a9c8-00\"\n}"
+                },
+                {
+                  "name": "Get Product",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/products/:productId",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "products",
+                        ":productId"
+                      ],
+                      "variable": [
+                        {
+                          "key": "productId",
+                          "value": "108"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:00:00 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 108,\n        \"companyId\": 1,\n        \"name\": \"مبرد موبيل 4لتر\",\n        \"description\": \"مبرد موبيل 4لتر\\r\\n\",\n        \"price\": 500,\n        \"taxGroupId\": 4,\n        \"taxGroupName\": \"قيمة مضافة 14%\",\n        \"unitId\": 6,\n        \"unitName\": \"EA - EA\",\n        \"sku\": \"EG-256852464-MO26\",\n        \"companyName\": null,\n        \"branchCount\": 0,\n        \"productCategoryId\": 11,\n        \"categoryName\": \"زيوت - موبيل\",\n        \"isActive\": true,\n        \"branchIds\": [],\n        \"isTaxable\": true,\n        \"taxRate\": 14\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PosOrders",
+          "item": [
+            {
+              "name": "01-CreateOrder",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "let response = pm.response.json();\r",
+                      "\r",
+                      "if(response.succeeded){\r",
+                      "pm.environment.set(\"lastOrderId\", response.data.id);\r",
+                      "pm.environment.set(\"lastOrderNumber\", response.data.orderNumber);\r",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 45,\r\n      \"quantity\": 3,\r\n      \"discountAmount\": 0\r\n    }, {\r\n      \"productId\": 46,\r\n      \"quantity\": 8,\r\n      \"discountAmount\": 0\r\n    }\r\n  ],\r\n  \"paymentMethod\": \"Visa\", // Cash / Visa\r\n  \"customerName\": \"yahya Visa\",\r\n  \"extraDiscount\": 0,\r\n  \"notes\": \"50\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders"
+                  ]
+                },
+                "description": "PaymentMethod must be exactly \"Cash\" or \"Visa\"."
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 80,\r\n      \"quantity\": 5,\r\n      \"discountAmount\": 0\r\n    },\r\n        {\r\n      \"productId\": 81,\r\n      \"quantity\": 1,\r\n      \"discountAmount\": 0\r\n    }\r\n  ],\r\n  \"paymentMethod\": \"string\", // Cash / Visa\r\n  \"customerName\": \"yahya\",\r\n  \"extraDiscount\": 0,\r\n  \"notes\": \"\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/problem+json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:19:27 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\n    \"title\": \"One or more validation errors occurred.\",\n    \"status\": 400,\n    \"errors\": {\n        \"PaymentMethod\": [\n            \"PaymentMethod must be either 'Cash' or 'Visa'\"\n        ]\n    },\n    \"traceId\": \"00-65c7e72fbcbe742d62f4684d8a638084-dae6e16f465f1230-00\"\n}"
+                },
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 80,\r\n      \"quantity\": 5,\r\n      \"discountAmount\": 0\r\n    },\r\n        {\r\n      \"productId\": 81,\r\n      \"quantity\": 1,\r\n      \"discountAmount\": 0\r\n    }\r\n  ],\r\n  \"paymentMethod\": \"Cash\", // Cash / Visa\r\n  \"customerName\": \"yahya\",\r\n  \"extraDiscount\": -100,\r\n  \"notes\": \"\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/problem+json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:20:11 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\n    \"title\": \"One or more validation errors occurred.\",\n    \"status\": 400,\n    \"errors\": {\n        \"ExtraDiscount\": [\n            \"Extra discount must be non-negative\"\n        ]\n    },\n    \"traceId\": \"00-9d35909f2d2a38399c2aa830172bba11-cc291f77fbaa014e-00\"\n}"
+                },
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"items\": [],\r\n  \"paymentMethod\": \"Cash\", // Cash / Visa\r\n  \"customerName\": \"yahya\",\r\n  \"extraDiscount\": 0,\r\n  \"notes\": \"\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/problem+json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:20:36 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\n    \"title\": \"One or more validation errors occurred.\",\n    \"status\": 400,\n    \"errors\": {\n        \"Items\": [\n            \"At least one item is required\"\n        ]\n    },\n    \"traceId\": \"00-951cbc8a965eed005ba6e56740d07058-075d195d29ead803-00\"\n}"
+                },
+                {
+                  "name": "Product Not Found",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 811,\r\n      \"quantity\": 5,\r\n      \"discountAmount\": 0\r\n    },\r\n        {\r\n      \"productId\": 81,\r\n      \"quantity\": 1,\r\n      \"discountAmount\": 0\r\n    }\r\n  ],\r\n  \"paymentMethod\": \"Cash\", // Cash / Visa\r\n  \"customerName\": \"yahya cash\",\r\n  \"extraDiscount\": 0,\r\n  \"notes\": \"\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:22:52 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Products not found: 811\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Cash Order Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 80,\r\n      \"quantity\": 5,\r\n      \"discountAmount\": 0\r\n    },\r\n        {\r\n      \"productId\": 81,\r\n      \"quantity\": 1,\r\n      \"discountAmount\": 0\r\n    }\r\n  ],\r\n  \"paymentMethod\": \"Cash\", // Cash / Visa\r\n  \"customerName\": \"yahya cash\",\r\n  \"extraDiscount\": 0,\r\n  \"notes\": \"\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:30:58 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Location",
+                      "value": "https://localhost:7107/api/pos/orders/3"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Order created successfully.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 3,\n        \"orderNumber\": \"e3c7dd367fee477ab236c64f4ca91f49\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 122.75,\n        \"taxAmount\": 0,\n        \"totalAmount\": 122.75,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Cash\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya cash\",\n        \"extraDiscount\": 0,\n        \"notes\": \"\",\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T08:30:58.8751279Z\",\n        \"expiresAt\": \"2026-02-19T08:45:58.8745766Z\",\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 5,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 105,\n                \"taxAmount\": 0,\n                \"total\": 105\n            },\n            {\n                \"productId\": 81,\n                \"productName\": \"بنزين 80\",\n                \"quantity\": 1,\n                \"unitPrice\": 17.75,\n                \"discountAmount\": 0,\n                \"netTotal\": 17.75,\n                \"taxAmount\": 0,\n                \"total\": 17.75\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 201\n}"
+                }
+              ]
+            },
+            {
+              "name": "02-Payment Result",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"status\": \"Success\", // Failed , Success\r\n  \"externalReference\": \"TXN_778111\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders",
+                    "{{lastOrderId}}",
+                    "payment-result"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Faisled\", // Failed , Success\r\n  \"externalReference\": \"TXN_778896\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/problem+json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:25:42 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\n    \"title\": \"One or more validation errors occurred.\",\n    \"status\": 400,\n    \"errors\": {\n        \"Status\": [\n            \"Status must be 'Success' or 'Failed'\"\n        ]\n    },\n    \"traceId\": \"00-af96d803c514608ab5401e98d5832bfb-e94b578eb956393a-00\"\n}"
+                },
+                {
+                  "name": "Order not found",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Success\", // Failed , Success\r\n  \"externalReference\": \"TXN_778898\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:28:18 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Order not found.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 404\n}"
+                },
+                {
+                  "name": "Payment already processed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Success\", // Failed\r\n  \"externalReference\": \"TXN_778899\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"CIB\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:13:32 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Payment already processed successfully.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 5,\n        \"orderNumber\": \"599161e2c3934350b2b8134148639b25\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1090,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": \"TXN_778899\",\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 50,\n        \"notes\": \"50\",\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T09:02:39.154136\",\n        \"expiresAt\": \"2026-02-19T09:17:11.777547\",\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "Payment reference used and processed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Failed\", // Failed , Success\r\n  \"externalReference\": \"TXN_778899\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"CIB\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:15:33 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"This payment reference has already been used and processed.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 409\n}"
+                },
+                {
+                  "name": "Marked as Failed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Failed\", // Failed , Success\r\n  \"externalReference\": \"TXN_778891\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:19:28 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Payment failed. Order marked as Failed.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 6,\n        \"orderNumber\": \"29dc09c4dc06428c93136d55b68468b4\",\n        \"status\": \"Failed\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 42,\n        \"taxAmount\": 0,\n        \"totalAmount\": -8,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 50,\n        \"notes\": \"50\",\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T09:14:25.353777\",\n        \"expiresAt\": \"2026-02-19T09:29:25.352913\",\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 2,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 42,\n                \"taxAmount\": 0,\n                \"total\": 42\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "Cash orders not allowed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Failed\", // Failed , Success\r\n  \"externalReference\": \"TXN_778100\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:30:22 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Cash orders do not use the payment-result endpoint.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Success (sale)",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Success\", // Failed\r\n  \"externalReference\": \"TXN_778899\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"CIB\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:11:37 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Payment confirmed. Order marked as Paid.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 5,\n        \"orderNumber\": \"599161e2c3934350b2b8134148639b25\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1090,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": \"TXN_778899\",\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 50,\n        \"notes\": \"50\",\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T09:02:39.154136\",\n        \"expiresAt\": \"2026-02-19T09:17:11.777547\",\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "Success (return)",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"status\": \"Success\", // Failed , Success\r\n  \"externalReference\": \"TXN_778105\",\r\n  \"rawResponse\": \"{ \\\"gateway_code\\\": \\\"00\\\", \\\"bank\\\":\\\"Ahly\\\" }\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/payment-result",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "payment-result"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 11:02:50 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Payment confirmed. Order marked as Paid.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 16,\n        \"orderNumber\": \"RET-3CADA3BA\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1140,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": \"TXN_778105\",\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T10:59:05.470213\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                }
+              ]
+            },
+            {
+              "name": "03-GenerateReceiptFromOrder",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders",
+                    "{{lastOrderId}}",
+                    "generate-receipt"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Order not found",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:34:12 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Order not found.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 404\n}"
+                },
+                {
+                  "name": "Receipt has already been created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:33:42 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Receipt has already been created for this order.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 409\n}"
+                },
+                {
+                  "name": "Invalid Order Status",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "Unprocessable Entity",
+                  "code": 422,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:36:54 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Cannot generate receipt: order status is 'PendingPayment'. Must be Paid.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 422\n}"
+                },
+                {
+                  "name": "Expired Order",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "Unprocessable Entity",
+                  "code": 422,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:00:49 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Cannot generate receipt: order status is 'Expired'. Must be Paid.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 422\n}"
+                },
+                {
+                  "name": "Cannot generate receipt for an order created by another device",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:43:38 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Device mismatch: Cannot generate receipt for an order created by another device.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 403\n}"
+                },
+                {
+                  "name": "Cash Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 08:31:40 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Receipt SR-20260219-0001 created successfully.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 3,\n        \"orderNumber\": \"e3c7dd367fee477ab236c64f4ca91f49\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 122.75,\n        \"taxAmount\": 0,\n        \"totalAmount\": 122.75,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Cash\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya cash\",\n        \"extraDiscount\": 0,\n        \"notes\": \"\",\n        \"isReceiptCreated\": true,\n        \"createdAt\": \"2026-02-19T08:30:58.875127\",\n        \"expiresAt\": \"2026-02-19T08:45:58.874576\",\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 5,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 105,\n                \"taxAmount\": 0,\n                \"total\": 105\n            },\n            {\n                \"productId\": 81,\n                \"productName\": \"بنزين 80\",\n                \"quantity\": 1,\n                \"unitPrice\": 17.75,\n                \"discountAmount\": 0,\n                \"netTotal\": 17.75,\n                \"taxAmount\": 0,\n                \"total\": 17.75\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "Visa Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:33:46 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Receipt SR-20260219-0004 created successfully.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 5,\n        \"orderNumber\": \"599161e2c3934350b2b8134148639b25\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Sale\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1090,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": \"TXN_778899\",\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 50,\n        \"notes\": \"50\",\n        \"isReceiptCreated\": true,\n        \"createdAt\": \"2026-02-19T09:02:39.154136\",\n        \"expiresAt\": \"2026-02-19T09:17:11.777547\",\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "RR Success Cash",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/{{lastOrderId}}/generate-receipt",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "{{lastOrderId}}",
+                        "generate-receipt"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:42:52 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Receipt RR-20260219-0002 created successfully.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 12,\n        \"orderNumber\": \"RET-D9C94810\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 84,\n        \"taxAmount\": 0,\n        \"totalAmount\": 84,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Cash\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya cash\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": true,\n        \"createdAt\": \"2026-02-19T10:38:32.265451\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 4,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 84,\n                \"taxAmount\": 0,\n                \"total\": 84\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                }
+              ]
+            },
+            {
+              "name": "04-Return Order",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "let response = pm.response.json();\r",
+                      "\r",
+                      "if(response.succeeded){\r",
+                      "pm.environment.set(\"lastOrderId\", response.data.id);\r",
+                      "pm.environment.set(\"lastOrderNumber\", response.data.orderNumber);\r",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"originalReceiptId\": 4,\r\n  \"items\": [\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders/return",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders",
+                    "return"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Return Not Found Product",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    { \"productId\": 10, \"quantity\": 1 }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 09:49:23 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Product 10 not found in original receipt.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Exceeds remaining returnable quantity",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    { \"productId\": 80, \"quantity\": 5 }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:36:25 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Return quantity for product 80 exceeds remaining returnable quantity (4.00000).\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Return Quantity Zero",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    { \"productId\": 81, \"quantity\": 0 }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:48:45 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Return quantity for product 81 must be greater than zero.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Cannot return full order if already  partial returned",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:50:12 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Cannot return all items: Product 80 already has 5.00000 units returned or in-progress.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Already Fully Returned",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    { \"productId\": 81, \"quantity\": 1 }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:52:04 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"This receipt has already been fully returned.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 400\n}"
+                },
+                {
+                  "name": "Partial Return (Success)",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 3,\r\n  \"items\": [\r\n    { \"productId\": 80, \"quantity\": 1 }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:34:44 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Location",
+                      "value": "https://localhost:7107/api/pos/orders/11"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Return order created. Proceed to refund confirmation.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 11,\n        \"orderNumber\": \"RET-A47F9475\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 21,\n        \"taxAmount\": 0,\n        \"totalAmount\": 21,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Cash\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya cash\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T10:34:33.8281932Z\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 1,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 21,\n                \"taxAmount\": 0,\n                \"total\": 21\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 201\n}"
+                },
+                {
+                  "name": "Full Return (Success)",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 2,\r\n  \"items\": [\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:53:29 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Location",
+                      "value": "https://localhost:7107/api/pos/orders/15"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Return order created. Proceed to refund confirmation.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 15,\n        \"orderNumber\": \"RET-58F3F245\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 122.75,\n        \"taxAmount\": 0,\n        \"totalAmount\": 122.75,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Cash\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya cash\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T10:53:29.3979036Z\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 80,\n                \"productName\": \"بنزين 95\",\n                \"quantity\": 5,\n                \"unitPrice\": 21,\n                \"discountAmount\": 0,\n                \"netTotal\": 105,\n                \"taxAmount\": 0,\n                \"total\": 105\n            },\n            {\n                \"productId\": 81,\n                \"productName\": \"بنزين 80\",\n                \"quantity\": 1,\n                \"unitPrice\": 17.75,\n                \"discountAmount\": 0,\n                \"netTotal\": 17.75,\n                \"taxAmount\": 0,\n                \"total\": 17.75\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 201\n}"
+                },
+                {
+                  "name": "Full Return (V-Success)",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"originalReceiptId\": 4,\r\n  \"items\": [\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/return",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        "return"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 10:59:13 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Location",
+                      "value": "https://localhost:7107/api/pos/orders/16"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "// next step after success is to call {id}/payment-result\n{\n    \"messages\": [\n        \"Return order created. Proceed to refund confirmation.\"\n    ],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 16,\n        \"orderNumber\": \"RET-3CADA3BA\",\n        \"status\": \"Pending\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1140,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": null,\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": false,\n        \"createdAt\": \"2026-02-19T10:59:05.4702137Z\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 201\n}"
+                }
+              ]
+            },
+            {
+              "name": "All Orders",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders?SearchTerm=",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "From",
+                      "value": "",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "To",
+                      "value": "",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "Paid",
+                      "description": "Paid , PendingPayment , Failed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "orderType",
+                      "value": "Sale",
+                      "description": "Return , Sale",
+                      "disabled": true
+                    },
+                    {
+                      "key": "PageNumber",
+                      "value": "1",
+                      "disabled": true
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5",
+                      "disabled": true
+                    },
+                    {
+                      "key": "SearchTerm",
+                      "value": ""
+                    }
+                  ]
+                },
+                "description": "**Query Parameters**:\n\n- `PageNumber` / `PageSize`: Pagination control.\n    \n- `From` / `To`: Date range filters (UTC).\n    \n- `Status`: Filter by `PendingPayment` , `Paid`, `Failed`, etc.\n    \n- `OrderType`: Filter by `Sale` or `Return`.\n    \n- `SearchTerm`: Search by `OrderNumber` or `CustomerName`.\n    \n\n``` csharp\n    public enum PosOrderStatus\n    {\n       Pending\n       PendingPayment \n       Paid\n       Failed \n       Expired \n    }\n\n ```"
+              },
+              "response": []
+            },
+            {
+              "name": "Order by id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/orders/:orderId",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "orders",
+                    ":orderId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "orderId",
+                      "value": "{{lastOrderId}}"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Order",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/:orderId",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        ":orderId"
+                      ],
+                      "variable": [
+                        {
+                          "key": "orderId",
+                          "value": "{{lastOrderId}}"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 11:13:06 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [],\n    \"succeeded\": true,\n    \"data\": {\n        \"id\": 16,\n        \"orderNumber\": \"RET-3CADA3BA\",\n        \"status\": \"Paid\",\n        \"orderType\": \"Return\",\n        \"subtotal\": 1000,\n        \"taxAmount\": 140,\n        \"totalAmount\": 1140,\n        \"currency\": \"EGP\",\n        \"paymentMethod\": \"Visa\",\n        \"paymentReference\": \"TXN_778105\",\n        \"customerName\": \"yahya Visa\",\n        \"extraDiscount\": 0,\n        \"notes\": null,\n        \"isReceiptCreated\": true,\n        \"createdAt\": \"2026-02-19T10:59:05.470213\",\n        \"expiresAt\": null,\n        \"lines\": [\n            {\n                \"productId\": 108,\n                \"productName\": \"مبرد موبيل 4لتر\",\n                \"quantity\": 2,\n                \"unitPrice\": 500,\n                \"discountAmount\": 0,\n                \"netTotal\": 1000,\n                \"taxAmount\": 140,\n                \"total\": 1140\n            }\n        ]\n    },\n    \"validationErrors\": [],\n    \"code\": 200\n}"
+                },
+                {
+                  "name": "Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/pos/orders/:orderId",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "pos",
+                        "orders",
+                        ":orderId"
+                      ],
+                      "variable": [
+                        {
+                          "key": "orderId",
+                          "value": "{{lastOrderId}}1"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Thu, 19 Feb 2026 11:14:28 GMT"
+                    },
+                    {
+                      "key": "Server",
+                      "value": "Kestrel"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"messages\": [\n        \"Order not found.\"\n    ],\n    \"succeeded\": false,\n    \"data\": null,\n    \"validationErrors\": [],\n    \"code\": 404\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PosReceipts",
+          "item": [
+            {
+              "name": "All Receipts",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/receipts?PageNumber =1&PageSize=1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "receipts"
+                  ],
+                  "query": [
+                    {
+                      "key": "PageNumber ",
+                      "value": "1"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "1"
+                    },
+                    {
+                      "key": "From ",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "To",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ReceiptType",
+                      "value": "SR",
+                      "description": "RR , SR",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "SearchTerm",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "- `PageNumber` / `PageSize`: Pagination.\n    \n- `From` / `To`: Date range.\n    \n- `ReceiptType`: `SR` (Sales) or `RR` (Refund).\n    \n- `SearchTerm`: Search by receipt number or customer name.\n    \n\nEndFragment"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Receipt By Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/pos/receipts/:receiptid",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "receipts",
+                    ":receiptid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "receiptid",
+                      "value": "9"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Pos Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let response = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"access_token\", response.token);\r",
+                  "\r",
+                  "pm.environment.set(\"token_expiration\", response.expiration);\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"cashier1\",\r\n  \"password\": \"Admin@123\",\r\n  \"deviceSerial\": \"2034082646\" // 5CG7011TLM // 5CG72202YT\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pos/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "No Company Assigned",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"cashier1\",\r\n  \"password\": \"Admin@123\",\r\n  \"deviceSerial\": \"2034082646\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 19 Feb 2026 07:29:19 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"token\": \"\",\n    \"message\": \"User role is not allowed for POS operations.\",\n    \"isSuccess\": false,\n    \"expiration\": \"0001-01-01T00:00:00\",\n    \"user\": null\n}"
+            },
+            {
+              "name": "Invalid Credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"cashier2\",\r\n  \"password\": \"wrong pasword\",\r\n  \"deviceSerial\": \"2034082646\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 19 Feb 2026 07:32:12 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"token\": \"\",\n    \"message\": \"Invalid username or password.\",\n    \"isSuccess\": false,\n    \"expiration\": \"0001-01-01T00:00:00\",\n    \"user\": null\n}"
+            },
+            {
+              "name": "Device Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"cashier1\",\r\n  \"password\": \"Admin@123\",\r\n  \"deviceSerial\": \"2034082646\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 19 Feb 2026 07:34:39 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"token\": \"\",\n    \"message\": \"Device not found.\",\n    \"isSuccess\": false,\n    \"expiration\": \"0001-01-01T00:00:00\",\n    \"user\": null\n}"
+            },
+            {
+              "name": "Device does not belong to user's company",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"cashier1\",\r\n  \"password\": \"Admin@123\",\r\n  \"deviceSerial\": \"SN-C004-D0038\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 19 Feb 2026 07:38:10 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"token\": \"\",\n    \"message\": \"Device does not belong to user's company.\",\n    \"isSuccess\": false,\n    \"expiration\": \"0001-01-01T00:00:00\",\n    \"user\": null\n}"
+            },
+            {
+              "name": "Login successful",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"cashier1\",\r\n  \"password\": \"Admin@123\",\r\n  \"deviceSerial\": \"5CG72202YT\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pos/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pos",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 19 Feb 2026 07:40:23 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "Kestrel"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjciLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiY2FzaGllcjEiLCJqdGkiOiIzNmY3MzJlOC01NTIxLTRiY2QtYmIwOS0yZGFjNmY0ZGMxOWMiLCJhY3RvciI6InBvcyIsInVzZXJJZCI6IjciLCJ1c2VybmFtZSI6ImNhc2hpZXIxIiwicm9sZSI6IkNhc2hpZXIiLCJkZXZpY2VJZCI6IjEiLCJkZXZpY2VTZXJpYWwiOiI1Q0c3MjIwMllUIiwiY29tcGFueUlkIjoiMSIsImJyYW5jaElkIjoiMiIsImV4cCI6MTc3MTQ5MDQyMSwiaXNzIjoiQ29tcGFueUFwaSIsImF1ZCI6IkNvbXBhbnlBcGlVc2VycyJ9.r1E7-NHwGWX_VG5OcKUP8sTwCRQrSXuascwd8lLR9Y0\",\n    \"message\": \"Login successful.\",\n    \"isSuccess\": true,\n    \"expiration\": \"2026-02-19T08:40:21Z\",\n    \"user\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "@me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pos/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daily Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pos/monitoring",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "monitoring"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{date}",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "{date}",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

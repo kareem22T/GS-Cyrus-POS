@@ -53,7 +53,7 @@ export default function OrderDetailsScreen() {
   const handleReturnOrder = () => {
     if (!document) return;
     router.push({
-      pathname: "(protected)/(tabs)/return-order",
+      pathname: "/(protected)/(tabs)/return-order",
       params: {
         orderId: document.id.toString(),
         orderData: JSON.stringify(document),

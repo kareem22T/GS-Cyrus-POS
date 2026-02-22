@@ -122,7 +122,7 @@ export default function OrdersScreen() {
 
   const handleViewOrder = (document: any) => {
     router.push({
-      pathname: "(protected)/(tabs)/order-details",
+      pathname: "/(protected)/(tabs)/order-details",
       params: { orderId: document.id },
     });
   };
