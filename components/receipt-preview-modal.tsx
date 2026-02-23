@@ -2,12 +2,20 @@ import { Colors } from "@/constants/theme";
 import { generateHTMLReceipt } from "@/utils/htmlReceiptGenerator";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { captureRef } from "react-native-view-shot";
 import { WebView } from "react-native-webview";
 import { PAXPrinterModule } from "../modules/FawryNativeModule";
 import { Button } from "./ui/button";
 import { ThemedText } from "./ui/themed-text";
 import { ThemedView } from "./ui/themed-view";
+
+function parseApiDate(dateString: string): Date {
+  const normalized = dateString
+    ?.replace(/(\.\d{3})\d+/, "$1")
+    ?.replace(/(?<![Z]|[+-]\d{2}:?\d{2})$/, "Z");
+  return new Date(normalized);
+}
 
 // Minimal Document + DocumentItem shape used by the modal
 export interface DocumentItem {
@@ -17,13 +25,18 @@ export interface DocumentItem {
   unitPrice: number;
   discountAmount?: number;
   vat?: number;
+  taxAmount?: number;
   notes?: string;
 }
 
 export interface Document {
-  receiptDate: string;
+  receiptDate?: string;
+  createdAt?: string;
+  receiptNumber?: string;
+  orderNumber?: string;
+  lines?: DocumentItem[];
   extraDiscount?: number;
-  paymentMethod?: number;
+  paymentMethod?: number | string;
   documentType?: number;
   customerName?: string;
   deviceSerial?: string;
@@ -36,7 +49,6 @@ export interface Document {
   totalVAT?: number;
   totalDiscount?: number;
   totalAmount?: number;
-  receiptNumber?: string;
   items?: DocumentItem[];
   receiptItems?: DocumentItem[];
 }
@@ -68,6 +80,7 @@ export function ReceiptPreviewModal({
   const items: DocumentItem[] = useMemo(
     () =>
       (document?.items as DocumentItem[] | undefined) ??
+      (document as any)?.lines ??
       (document as any)?.receiptItems ??
       [],
     [document],
@@ -84,7 +97,7 @@ export function ReceiptPreviewModal({
     items.forEach((item: DocumentItem) => {
       const itemSubtotal = item.unitPrice * item.quantity;
       subtotal += itemSubtotal;
-      totalVAT += item.vat || 0;
+      totalVAT += item.vat ?? item.taxAmount ?? 0;
       totalDiscount += item.discountAmount || 0;
     });
 
@@ -196,9 +209,12 @@ export function ReceiptPreviewModal({
     if (!document) return;
 
     const lines: string[] = [];
+    const _date =
+      document.receiptDate ?? document.createdAt ?? new Date().toISOString();
     const receiptNum =
-      document.receiptNumber ||
-      `REC-${new Date(document.receiptDate).getTime().toString().slice(-8)}`;
+      document.receiptNumber ??
+      document.orderNumber ??
+      `REC-${parseApiDate(_date).getTime().toString().slice(-8)}`;
 
     lines.push("");
     lines.push("  ╔═══════════════════════════════════╗");
@@ -211,7 +227,7 @@ export function ReceiptPreviewModal({
     lines.push("");
     lines.push(padString(`رقم الإيصال: ${receiptNum}`, 40, "center"));
 
-    const dateObj = new Date(document.receiptDate);
+    const dateObj = parseApiDate(_date);
     const dateStr = dateObj.toLocaleDateString("ar-EG");
     const timeStr = dateObj.toLocaleTimeString("ar-EG", {
       hour: "2-digit",
@@ -238,7 +254,7 @@ export function ReceiptPreviewModal({
         const name = it.productName || `منتج #${it.productId}`;
         const itemTotal = (
           it.unitPrice * it.quantity +
-          (it.vat || 0) -
+          (it.vat ?? it.taxAmount ?? 0) -
           (it.discountAmount || 0)
         ).toFixed(2);
 
@@ -297,13 +313,15 @@ export function ReceiptPreviewModal({
       lines.push("");
     }
 
-    const paymentMethods: { [key: number]: string } = {
-      1: "نقدي",
-      2: "بطاقة ائتمان",
-      3: "محفظة إلكترونية",
+    const paymentMethods: { [key: string]: string } = {
+      "1": "نقدي",
+      "2": "بطاقة ائتمان",
+      "3": "محفظة إلكترونية",
+      Cash: "نقدي",
+      Visa: "بطاقة ائتمان",
     };
     const paymentMethodText =
-      paymentMethods[document.paymentMethod || 1] || "نقدي";
+      paymentMethods[String(document.paymentMethod ?? 1)] || "نقدي";
     lines.push(padString(`طريقة الدفع: ${paymentMethodText}`, 40, "center"));
     lines.push("");
 
@@ -388,9 +406,12 @@ export function ReceiptPreviewModal({
 
   if (!visible || !document) return null;
 
+  const _receiptDate =
+    document.receiptDate ?? document.createdAt ?? new Date().toISOString();
   const receiptNumber =
-    document.receiptNumber ||
-    `REC-${new Date(document.receiptDate).getTime().toString().slice(-8)}`;
+    document.receiptNumber ??
+    document.orderNumber ??
+    `REC-${parseApiDate(_receiptDate).getTime().toString().slice(-8)}`;
 
   const htmlContent = document ? generateHTMLReceipt(document) : "";
 
@@ -401,7 +422,7 @@ export function ReceiptPreviewModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <ThemedView style={styles.header}>
           <ThemedText type="title">معاينة الإيصال</ThemedText>
         </ThemedView>
@@ -449,10 +470,10 @@ export function ReceiptPreviewModal({
                 رقم الإيصال: {receiptNumber}
               </ThemedText>
               <ThemedText style={styles.receiptDate}>
-                {new Date(document.receiptDate).toLocaleDateString("ar-EG")}
+                {parseApiDate(_receiptDate).toLocaleDateString("ar-EG")}
               </ThemedText>
               <ThemedText style={styles.receiptDate}>
-                {new Date(document.receiptDate).toLocaleTimeString("ar-EG", {
+                {parseApiDate(_receiptDate).toLocaleTimeString("ar-EG", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -482,7 +503,7 @@ export function ReceiptPreviewModal({
                 items.map((item, i) => {
                   const itemTotal =
                     item.unitPrice * item.quantity +
-                    (item.vat || 0) -
+                    (item.vat ?? item.taxAmount ?? 0) -
                     (item.discountAmount || 0);
                   return (
                     <View key={i} style={styles.itemContainer}>
@@ -572,11 +593,15 @@ export function ReceiptPreviewModal({
             <ThemedView style={styles.section}>
               <ThemedText style={styles.paymentMethod}>
                 طريقة الدفع:{" "}
-                {{
-                  1: "نقدي",
-                  2: "بطاقة ائتمان",
-                  3: "محفظة إلكترونية",
-                }[document.paymentMethod || 1] || "نقدي"}
+                {(
+                  {
+                    "1": "نقدي",
+                    "2": "بطاقة ائتمان",
+                    "3": "محفظة إلكترونية",
+                    Cash: "نقدي",
+                    Visa: "بطاقة ائتمان",
+                  } as Record<string, string>
+                )[String(document.paymentMethod ?? 1)] || "نقدي"}
               </ThemedText>
             </ThemedView>
 
@@ -635,7 +660,7 @@ export function ReceiptPreviewModal({
             style={styles.closeActionButton}
           />
         </ThemedView>
-      </ThemedView>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -646,7 +671,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },

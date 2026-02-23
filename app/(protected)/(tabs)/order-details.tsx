@@ -19,6 +19,13 @@ import { Card } from "../../../components/ui/card";
 import { ThemedText } from "../../../components/ui/themed-text";
 import { ThemedView } from "../../../components/ui/themed-view";
 
+function parseApiDate(dateString: string): Date {
+  const normalized = dateString
+    ?.replace(/(\.\d{3})\d+/, "$1")
+    ?.replace(/(?<![Z]|[+-]\d{2}:?\d{2})$/, "Z");
+  return new Date(normalized);
+}
+
 export default function OrderDetailsScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
   const [document, setDocument] = useState<any | null>(null);
@@ -62,7 +69,7 @@ export default function OrderDetailsScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseApiDate(dateString);
     return date.toLocaleDateString("ar-EG", {
       day: "numeric",
       month: "short",

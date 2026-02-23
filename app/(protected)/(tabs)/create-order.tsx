@@ -28,6 +28,9 @@ import { ProductCard } from "../../../components/ui/product-card";
 
 const PAGE_SIZE = 10;
 
+type SortKey = "Name" | "Sku" | "Price" | "Category";
+type SortDirection = "asc" | "desc";
+
 export default function CreateOrderScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const cart = useCartStore((s) => s.items);
@@ -49,6 +52,13 @@ export default function CreateOrderScreen() {
   const [inputMode, setInputMode] = useState<"quantity" | "price">("price");
   const inputRef = useRef<TextInput>(null);
 
+  // search and sorting
+  const [searchQuery, setSearchQuery] = useState("");
+  // null = no sort applied
+  const [sortBy, setSortBy] = useState<SortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (showQuantityModal) {
       const t = setTimeout(() => {
@@ -60,13 +70,58 @@ export default function CreateOrderScreen() {
     }
   }, [showQuantityModal, inputMode]);
 
+  // trigger loadProducts when search query changes (debounced)
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      loadProducts(1, false);
+    }, 400);
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, [searchQuery]);
+
+  // reload when sort criteria change
+  useEffect(() => {
+    loadProducts(1, false);
+  }, [sortBy, sortDirection]);
+
+  /**
+   * Handle chip press:
+   *  - inactive chip  → activate it, direction = asc
+   *  - active chip, asc  → direction = desc
+   *  - active chip, desc → deactivate (sortBy = null)
+   */
+  const handleSortPress = (key: SortKey) => {
+    if (sortBy !== key) {
+      // activate with asc
+      setSortBy(key);
+      setSortDirection("asc");
+    } else if (sortDirection === "asc") {
+      // toggle to desc
+      setSortDirection("desc");
+    } else {
+      // deactivate
+      setSortBy(null);
+      setSortDirection("asc");
+    }
+  };
+
   const loadProducts = async (page = 1, append = false) => {
     try {
       setError(null);
+      if (!append) {
+        setProducts([]);
+        setPagination(null);
+      }
       if (append) setLoadingMore(true);
-      const res = await apiClient.get("/api/pos/products", {
-        params: { PageNumber: page, PageSize: PAGE_SIZE },
-      });
+      const params: any = { PageNumber: page, PageSize: PAGE_SIZE };
+      if (searchQuery) params.search = searchQuery;
+      if (sortBy) {
+        params.SortBy = sortBy;
+        params.SortDescending = sortDirection === "desc";
+      }
+      const res = await apiClient.get("/api/pos/products", { params });
 
       const data = res.data?.data ?? [];
       const pagination = res.data?.pagination ?? null;
@@ -122,7 +177,6 @@ export default function CreateOrderScreen() {
       return;
     }
 
-    // Use store action to add/update or remove
     if (qty === 0) {
       removeItem(editingProduct.id);
     } else {
@@ -179,6 +233,12 @@ export default function CreateOrderScreen() {
     );
   }
 
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: "Name", label: "الاسم" },
+    { key: "Price", label: "السعر" },
+    { key: "Category", label: "الفئة" },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <ThemedView style={styles.header}>
@@ -191,6 +251,54 @@ export default function CreateOrderScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <ThemedText style={styles.backText}>رجوع ←</ThemedText>
         </TouchableOpacity>
+      </ThemedView>
+
+      {/* search bar */}
+      <ThemedView style={styles.filterBar}>
+        <TextInput
+          placeholder="بحث..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={20} color="#666" />
+          </TouchableOpacity>
+        ) : null}
+      </ThemedView>
+
+      {/* sort bar — togglable chips */}
+      <ThemedView style={styles.sortBar}>
+        <ThemedText style={styles.sortLabel}>ترتيب:</ThemedText>
+        {SORT_OPTIONS.map(({ key, label }) => {
+          const isActive = sortBy === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              onPress={() => handleSortPress(key)}
+              style={[styles.sortChip, isActive && styles.sortChipActive]}
+              activeOpacity={0.7}
+            >
+              <ThemedText
+                style={[
+                  styles.sortChipText,
+                  isActive && styles.sortChipTextActive,
+                ]}
+              >
+                {label}
+              </ThemedText>
+              {isActive && (
+                <Ionicons
+                  name={sortDirection === "asc" ? "arrow-up" : "arrow-down"}
+                  size={13}
+                  color="#fff"
+                  style={{ marginLeft: 3 }}
+                />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ThemedView>
 
       <ScrollView
@@ -219,7 +327,7 @@ export default function CreateOrderScreen() {
               );
             })}
 
-            {/* Pagination: page info + load more */}
+            {/* Pagination */}
             {pagination && (
               <ThemedView style={styles.paginationContainer}>
                 <ThemedText style={styles.paginationInfo}>
@@ -425,36 +533,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
-    paddingBottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
   },
   subtitle: { opacity: 0.7, marginTop: 4 },
   backText: { color: "#007AFF", fontWeight: "600" },
   content: { flex: 1, padding: 20 },
   productsGrid: { gap: 12 },
-  productCard: {
-    padding: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#f8fafc",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
-  },
-  productCardInCart: { borderColor: "#10b981", backgroundColor: "#f0fdf4" },
-  productContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  productInfo: { flex: 1 },
-  productName: { fontSize: 16, marginBottom: 4 },
-  price: { color: "#007AFF", fontSize: 15 },
-  quantityBadge: {
-    marginTop: 4,
-    fontSize: 13,
-    color: "#10b981",
-    fontWeight: "600",
-  },
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -581,7 +666,66 @@ const styles = StyleSheet.create({
   },
   loadMoreButtonText: { color: "#fff", fontWeight: "600" },
 
-  /* cart / tax hint */
+  /* filter / search bar */
+  filterBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: "#ffffff",
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f9fafb",
+  },
+
+  /* sort bar */
+  sortBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    gap: 8,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  sortLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginRight: 2,
+  },
+  sortChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    backgroundColor: "#f3f4f6",
+    gap: 2,
+  },
+  sortChipActive: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  sortChipText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  sortChipTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
   cartTaxHint: { fontSize: 12, color: "#6b7280", marginTop: 4 },
 
   /* tax details in modal */

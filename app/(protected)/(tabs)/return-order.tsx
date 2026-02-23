@@ -1,57 +1,132 @@
-"use client";
-
 import apiClient from "@/api/client";
 import { Colors } from "@/constants/theme";
+import { useFawryPayment } from "@/hooks/useFawryPayment";
+import { useFawryStore } from "@/store/slices/fawry.slice";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ReceiptPreviewModal } from "../../../components/receipt-preview-modal";
 import { Card } from "../../../components/ui/card";
 import { ThemedText } from "../../../components/ui/themed-text";
 import { ThemedView } from "../../../components/ui/themed-view";
+// ─── Step type ────────────────────────────────────────────────────────────────
+type ReturnStep =
+  | "idle"
+  | "creating_return"
+  | "fawry_payment"
+  | "reporting_payment"
+  | "generating_receipt"
+  | "done";
 
+function getStepLabel(step: ReturnStep): string {
+  switch (step) {
+    case "creating_return":
+      return "جاري إنشاء طلب الإرجاع...";
+    case "fawry_payment":
+      return "جاري معالجة استرداد البطاقة...";
+    case "reporting_payment":
+      return "جاري تأكيد الدفع...";
+    case "generating_receipt":
+      return "جاري إنشاء إيصال الإرجاع...";
+    default:
+      return "تأكيد الإرجاع";
+  }
+}
+
+// ─── Error helper ─────────────────────────────────────────────────────────────
+function parseApiError(err: any): string {
+  const data = err?.response?.data;
+  if (!data) return err?.message || "حدث خطأ غير معروف";
+  if (Array.isArray(data?.messages) && data.messages.length > 0)
+    return data.messages[0];
+  if (data?.errors && typeof data.errors === "object") {
+    const firstKey = Object.keys(data.errors)[0];
+    const msgs = data.errors[firstKey];
+    if (Array.isArray(msgs) && msgs.length > 0) return msgs[0];
+  }
+  if (data?.title) return data.title;
+  if (typeof data === "string") return data;
+  return err?.message || "حدث خطأ غير معروف";
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ReturnOrderScreen() {
-  const { orderData } = useLocalSearchParams<{ orderData: string }>();
-  const document = orderData ? JSON.parse(orderData) : null;
+  const { receiptId, orderData } = useLocalSearchParams<{
+    receiptId: string;
+    orderData: string;
+  }>();
 
-  const [deviceId, setDeviceId] = useState<string>("");
-  useEffect(() => {
-    async function loadId() {
-      const androidId = "2034082646";
-      setDeviceId(androidId ?? "");
-    }
-    loadId();
-  }, []);
-
-  const [returnItems, setReturnItems] = useState<any[]>([]);
-  useEffect(() => {
-    if (document) {
-      setReturnItems(
-        (document.receiptItems || []).map((item: any) => ({
-          lineId: item.id,
-          productId: item.productId,
-          productName: item.productName,
-          originalQuantity: item.quantity,
-          returnQuantity: 0,
-          unitPrice: item.unitPrice,
-          vat: item.vat,
-          discountAmount: item.discountAmount,
-          notes: item.notes || "",
-        })),
-      );
+  // parse the orderData once; memoize to avoid creating a new object every render
+  const document = React.useMemo(() => {
+    if (!orderData) return null;
+    try {
+      return JSON.parse(orderData);
+    } catch {
+      return null;
     }
   }, [orderData]);
 
-  const [returnNotes, setReturnNotes] = useState("");
-  const [processing, setProcessing] = useState(false);
+  // Support both PosOrder.lines and PosReceipt.lines field names
+  const sourceLines = React.useMemo<any[]>(
+    () => document?.lines ?? document?.receiptItems ?? [],
+    [document],
+  );
 
+  const isFawryConnected = useFawryStore((s) => s.isConnected);
+  const { refundTransaction } = useFawryPayment();
+
+  const [returnItems, setReturnItems] = useState<any[]>([]);
+  useEffect(() => {
+    setReturnItems(
+      sourceLines.map((item: any) => ({
+        productId: item.productId,
+        productName: item.productName,
+        originalQuantity: item.quantity,
+        returnQuantity: 0,
+        unitPrice: item.unitPrice,
+        taxAmount: item.taxAmount ?? item.vat ?? 0,
+        discountAmount: item.discountAmount ?? 0,
+      })),
+    );
+  }, [sourceLines]);
+
+  const [returnNotes, setReturnNotes] = useState("");
+  const [step, setStep] = useState<ReturnStep>("idle");
+  const [showPreview, setShowPreview] = useState(false);
+  const [createdReceipt, setCreatedReceipt] = useState<any | null>(null);
+
+  // Retry modal for generate-receipt failures
+  const [retryModalVisible, setRetryModalVisible] = useState(false);
+  const [retryError, setRetryError] = useState("");
+  const [pendingReturnOrderId, setPendingReturnOrderId] = useState<
+    number | null
+  >(null);
+  const [generateRetryExpired, setGenerateRetryExpired] = useState(false);
+
+  // Retry modal for Fawry refund failures
+  const [paymentRetryModalVisible, setPaymentRetryModalVisible] =
+    useState(false);
+  const [paymentRetryError, setPaymentRetryError] = useState("");
+  const [pendingReturnIdForPayment, setPendingReturnIdForPayment] = useState<
+    number | null
+  >(null);
+  const [pendingRefundAmount, setPendingRefundAmount] = useState<number>(0);
+  const [pendingOriginalOrderNumber, setPendingOriginalOrderNumber] =
+    useState<string>("");
+  const [pendingOriginalFcrn, setPendingOriginalFcrn] = useState<string>("");
+
+  const isProcessing = step !== "idle" && step !== "done";
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
   const updateReturnQuantity = (index: number, quantity: string) => {
     const numQuantity = parseFloat(quantity) || 0;
     const maxQuantity = returnItems[index].originalQuantity;
@@ -68,19 +143,166 @@ export default function ReturnOrderScreen() {
     );
   const clearAllItems = () =>
     setReturnItems(returnItems.map((i) => ({ ...i, returnQuantity: 0 })));
+
   const getReturnSubtotal = () =>
     returnItems.reduce((s, it) => s + it.unitPrice * it.returnQuantity, 0);
   const getReturnTax = () =>
     returnItems.reduce(
-      (s, it) => s + (it.vat / (it.originalQuantity || 1)) * it.returnQuantity,
+      (s, it) =>
+        s + (it.taxAmount / (it.originalQuantity || 1)) * it.returnQuantity,
       0,
     );
   const getReturnTotal = () => getReturnSubtotal() + getReturnTax();
   const hasItemsToReturn = () => returnItems.some((i) => i.returnQuantity > 0);
 
+  // ─── Step: Generate receipt for the return order ──────────────────────────
+  const generateReturnReceipt = async (
+    returnOrderId: number,
+  ): Promise<boolean> => {
+    setStep("generating_receipt");
+    setGenerateRetryExpired(false);
+    try {
+      const res = await apiClient.post(
+        `/api/pos/orders/${returnOrderId}/generate-receipt`,
+      );
+      if (res.data?.succeeded || res.status === 200) {
+        setCreatedReceipt(res.data?.data ?? res.data);
+        setStep("done");
+        setShowPreview(true);
+        return true;
+      }
+      throw new Error(res.data?.messages?.[0] || "فشل إنشاء الإيصال");
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setStep("done");
+        router.replace("/(protected)/(tabs)/receipts");
+        return true;
+      }
+      const isExpired = err?.response?.status === 422;
+      const msg = isExpired
+        ? "انتهت صلاحية الطلب — لا يمكن إنشاء الإيصال بعد الآن."
+        : parseApiError(err);
+      setPendingReturnOrderId(returnOrderId);
+      setRetryError(msg);
+      setGenerateRetryExpired(isExpired);
+      setRetryModalVisible(true);
+      setStep("idle");
+      return false;
+    }
+  };
+
+  // ─── Retry Fawry refund on the existing pending return order ───────────────
+  const retryFawryRefund = async () => {
+    if (!pendingReturnIdForPayment) return;
+    setPaymentRetryModalVisible(false);
+    setStep("fawry_payment");
+
+    let fcrn: string | undefined;
+    let rawResponse: string;
+    let fawrySucceeded = false;
+
+    try {
+      const fawryResult = await refundTransaction(
+        pendingRefundAmount,
+        pendingOriginalOrderNumber,
+        pendingOriginalFcrn,
+      );
+      rawResponse = fawryResult.response;
+      fcrn = JSON.parse(fawryResult.response)?.body?.fawryReference;
+      fawrySucceeded = fawryResult?.status === "success";
+    } catch (fawryErr: any) {
+      rawResponse = JSON.stringify({ error: fawryErr?.message ?? "unknown" });
+      fawrySucceeded = false;
+    }
+
+    if (!fawrySucceeded) {
+      setPaymentRetryError(
+        "فشلت عملية الاسترداد مجدداً. تأكد من اتصال الجهاز وصلاحية البطاقة.",
+      );
+      setPaymentRetryModalVisible(true);
+      setStep("idle");
+      return;
+    }
+
+    setStep("reporting_payment");
+    const orderIdToGenerate = pendingReturnIdForPayment;
+    try {
+      await apiClient.post(
+        `/api/pos/orders/${pendingReturnIdForPayment}/payment-result`,
+        {
+          status: "Success",
+          externalReference: fcrn ?? `FAWRY-${Date.now()}`,
+          rawResponse,
+        },
+      );
+    } catch (err: any) {
+      if (err?.response?.status !== 409) {
+        setPaymentRetryError(parseApiError(err));
+        setPaymentRetryModalVisible(true);
+        setStep("idle");
+        return;
+      }
+    }
+
+    setPendingReturnIdForPayment(null);
+    await generateReturnReceipt(orderIdToGenerate);
+  };
+
+  // ─── Cancel pending return: report Failed to backend and navigate away ──────
+  const cancelPendingReturn = async () => {
+    if (pendingReturnIdForPayment) {
+      try {
+        await apiClient.post(
+          `/api/pos/orders/${pendingReturnIdForPayment}/payment-result`,
+          {
+            status: "Failed",
+            externalReference: `CANCELLED-${Date.now()}`,
+            rawResponse: JSON.stringify({ cancelled: true }),
+          },
+        );
+      } catch {
+        // Best-effort — ignore errors
+      }
+    }
+    setPaymentRetryModalVisible(false);
+    setPendingReturnIdForPayment(null);
+    setStep("idle");
+    router.replace("/(protected)/(tabs)/transactions");
+  };
+
+  // ─── Return complete: show success feedback ────────────────────────────────
+  const handleReturnComplete = () => {
+    setShowPreview(false);
+    Alert.alert(
+      "✅ تم الإرجاع بنجاح",
+      "تمت عملية الإرجاع وإنشاء الإيصال بنجاح.",
+      [
+        {
+          text: "عرض الإيصالات",
+          onPress: () => router.replace("/(protected)/(tabs)/receipts"),
+        },
+        {
+          text: "رجوع",
+          style: "cancel",
+          onPress: () => router.back(),
+        },
+      ],
+    );
+  };
+
+  // ─── Submit return ────────────────────────────────────────────────────────
   const handleSubmitReturn = async () => {
     if (!hasItemsToReturn()) {
       Alert.alert("تنبيه", "الرجاء تحديد المنتجات المراد إرجاعها");
+      return;
+    }
+
+    const originalReceiptId = receiptId
+      ? parseInt(receiptId, 10)
+      : document?.id;
+
+    if (!originalReceiptId) {
+      Alert.alert("خطأ", "لا يمكن تحديد معرف الإيصال الأصلي");
       return;
     }
 
@@ -92,49 +314,117 @@ export default function ReturnOrderScreen() {
         {
           text: "تأكيد",
           onPress: async () => {
-            setProcessing(true);
+            setStep("creating_return");
             try {
               const itemsPayload = returnItems
                 .filter((it) => it.returnQuantity > 0)
                 .map((it) => ({
-                  originalDocumentLineId: it.lineId,
-                  returnedQuantity: it.returnQuantity,
+                  productId: it.productId,
+                  quantity: it.returnQuantity,
                 }));
 
               const payload = {
-                originalReceiptId: document.id,
+                originalReceiptId,
                 items: itemsPayload,
-                notes: returnNotes || `إرجاع للطلب #${document.id}`,
-                deviceSerial: deviceId || document.deviceSerial,
               };
 
               const res = await apiClient.post(
-                "/api/receipts/returns",
+                "/api/pos/orders/return",
                 payload,
               );
-              setProcessing(false);
 
-              if (res.data?.succeeded) {
-                Alert.alert(
-                  "تم الإرجاع بنجاح",
-                  res.data?.messages?.[0] || "تمت عملية الإرجاع",
-                );
-                router.push("/(protected)/(tabs)/orders");
-              } else {
-                console.warn("return failed", res.data);
-                Alert.alert(
-                  "فشل الإرجاع",
-                  res.data?.messages?.[0] || "فشل في معالجة الإرجاع",
+              if (!res.data?.succeeded) {
+                throw new Error(
+                  res.data?.messages?.[0] || "فشل إنشاء طلب الإرجاع",
                 );
               }
+
+              const returnOrder = res.data.data;
+              const returnOrderId: number = returnOrder.id;
+              const returnStatus: string = returnOrder.status;
+              const returnTotal: number =
+                returnOrder.totalAmount ?? getReturnTotal();
+
+              // Cash return: immediately Paid → generate receipt
+              if (returnStatus === "Paid") {
+                await generateReturnReceipt(returnOrderId);
+                return;
+              }
+
+              // Visa return: Pending → Fawry refund by orderNumber → payment-result → generate-receipt
+              if (!isFawryConnected) {
+                setStep("idle");
+                Alert.alert(
+                  "فوري غير متصل",
+                  "يجب توصيل جهاز فوري لإتمام الاسترداد بالبطاقة",
+                );
+                return;
+              }
+
+              setStep("fawry_payment");
+              let fcrn: string | undefined;
+              let rawResponse: string;
+              let fawrySucceeded = false;
+
+              try {
+                const fawryResult = await refundTransaction(
+                  returnTotal,
+                  document.orderNumber,
+                  document.paymentReference ?? "",
+                );
+                rawResponse = fawryResult.response;
+                fcrn = JSON.parse(fawryResult.response)?.body?.fawryReference;
+                fawrySucceeded = fawryResult?.status === "success";
+              } catch (fawryErr: any) {
+                rawResponse = JSON.stringify({
+                  error: fawryErr?.message ?? "unknown",
+                });
+                fawrySucceeded = false;
+              }
+
+              // Refund failed → show retry modal (return order stays Pending)
+              if (!fawrySucceeded) {
+                setPendingReturnIdForPayment(returnOrderId);
+                setPendingRefundAmount(returnTotal);
+                setPendingOriginalOrderNumber(document.orderNumber ?? "");
+                setPendingOriginalFcrn(document.paymentReference ?? "");
+                setPaymentRetryError(
+                  "فشلت عملية استرداد البطاقة. يمكنك إعادة المحاولة أو إلغاء الإرجاع.",
+                );
+                setPaymentRetryModalVisible(true);
+                setStep("idle");
+                return;
+              }
+
+              // Refund succeeded → report Success to backend
+              setStep("reporting_payment");
+              try {
+                await apiClient.post(
+                  `/api/pos/orders/${returnOrderId}/payment-result`,
+                  {
+                    status: "Success",
+                    externalReference: fcrn ?? `FAWRY-${Date.now()}`,
+                    rawResponse,
+                  },
+                );
+              } catch (err: any) {
+                if (err?.response?.status !== 409) {
+                  setPendingReturnIdForPayment(returnOrderId);
+                  setPendingRefundAmount(returnTotal);
+                  setPendingOriginalOrderNumber(document.orderNumber ?? "");
+                  setPendingOriginalFcrn(document.paymentReference ?? "");
+                  setPaymentRetryError(parseApiError(err));
+                  setPaymentRetryModalVisible(true);
+                  setStep("idle");
+                  return;
+                }
+              }
+
+              await generateReturnReceipt(returnOrderId);
             } catch (err: any) {
-              setProcessing(false);
-              console.error("Return error", err?.response?.data ?? err);
-              const serverMsg =
-                err?.response?.data?.messages?.[0] ||
-                err?.message ||
-                "حدث خطأ أثناء الإرجاع";
-              Alert.alert("فشل الإرجاع", serverMsg);
+              setStep("idle");
+              const msg = parseApiError(err);
+              Alert.alert("فشل الإرجاع", msg);
             }
           },
         },
@@ -160,12 +450,12 @@ export default function ReturnOrderScreen() {
     );
   }
 
-  if (processing) {
+  if (isProcessing) {
     return (
       <ThemedView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
         <ThemedText style={styles.processingText}>
-          جاري معالجة الإرجاع...
+          {getStepLabel(step)}
         </ThemedText>
       </ThemedView>
     );
@@ -173,6 +463,115 @@ export default function ReturnOrderScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Receipt Preview Modal */}
+      {createdReceipt && (
+        <ReceiptPreviewModal
+          visible={showPreview}
+          document={createdReceipt}
+          onClose={() => {
+            setShowPreview(false);
+            router.replace("/(protected)/(tabs)/receipts");
+          }}
+          onComplete={handleReturnComplete}
+        />
+      )}
+
+      {/* Generate Receipt Retry Modal */}
+      <Modal
+        visible={retryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          !generateRetryExpired && setRetryModalVisible(false)
+        }
+      >
+        <ThemedView style={styles.modalOverlay}>
+          <Card style={styles.retryModalCard}>
+            <ThemedText style={styles.retryModalTitle}>
+              {generateRetryExpired
+                ? "⏰ انتهت صلاحية الطلب"
+                : "فشل إنشاء الإيصال"}
+            </ThemedText>
+            <ThemedText style={styles.retryModalMessage}>
+              {retryError}
+            </ThemedText>
+            <ThemedText style={styles.retryModalHint}>
+              {generateRetryExpired
+                ? "تم تسجيل الإرجاع بنجاح لكن انتهت صلاحية الطلب. يرجى مراجعة المعاملات."
+                : "تم تسجيل الإرجاع بنجاح. يمكنك إنشاء الإيصال لاحقاً من شاشة المعاملات."}
+            </ThemedText>
+            <ThemedView style={styles.retryModalButtons}>
+              <TouchableOpacity
+                style={styles.retryModalSecondary}
+                onPress={() => {
+                  setRetryModalVisible(false);
+                  router.replace("/(protected)/(tabs)/transactions");
+                }}
+              >
+                <ThemedText style={styles.retryModalSecondaryText}>
+                  عرض المعاملات
+                </ThemedText>
+              </TouchableOpacity>
+              {!generateRetryExpired && (
+                <TouchableOpacity
+                  style={styles.retryModalPrimary}
+                  onPress={async () => {
+                    setRetryModalVisible(false);
+                    if (pendingReturnOrderId)
+                      await generateReturnReceipt(pendingReturnOrderId);
+                  }}
+                >
+                  <ThemedText style={styles.retryModalPrimaryText}>
+                    إعادة المحاولة
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
+            </ThemedView>
+          </Card>
+        </ThemedView>
+      </Modal>
+
+      {/* Payment Retry Modal — Fawry refund failed but return order exists */}
+      <Modal
+        visible={paymentRetryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <ThemedView style={styles.modalOverlay}>
+          <Card style={styles.retryModalCard}>
+            <ThemedText style={[styles.retryModalTitle, { color: "#d97706" }]}>
+              💳 فشل استرداد البطاقة
+            </ThemedText>
+            <ThemedText style={styles.retryModalMessage}>
+              {paymentRetryError}
+            </ThemedText>
+            <ThemedText style={styles.retryModalHint}>
+              طلب الإرجاع تم إنشاؤه. يمكنك إعادة محاولة الاسترداد أو إلغاء
+              الإرجاع.
+            </ThemedText>
+            <ThemedView style={styles.retryModalButtons}>
+              <TouchableOpacity
+                style={styles.paymentRetryCancel}
+                onPress={cancelPendingReturn}
+              >
+                <ThemedText style={styles.paymentRetryCancelText}>
+                  إلغاء الإرجاع
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.paymentRetryPrimary}
+                onPress={retryFawryRefund}
+              >
+                <ThemedText style={styles.retryModalPrimaryText}>
+                  إعادة الاسترداد
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </Card>
+        </ThemedView>
+      </Modal>
+
       {/* Compact Header */}
       <ThemedView style={styles.header}>
         <ThemedView>
@@ -291,7 +690,8 @@ export default function ReturnOrderScreen() {
                     إجمالي الإرجاع:{" "}
                     {(
                       item.unitPrice * item.returnQuantity +
-                      (item.vat / item.originalQuantity) * item.returnQuantity
+                      (item.taxAmount / (item.originalQuantity || 1)) *
+                        item.returnQuantity
                     ).toFixed(2)}{" "}
                     ج.م
                   </ThemedText>
@@ -358,7 +758,7 @@ export default function ReturnOrderScreen() {
           onPress={handleSubmitReturn}
           disabled={!hasItemsToReturn()}
         >
-          <ThemedText style={styles.submitButtonText}>
+          <ThemedText type="subtitle" style={styles.submitButtonText}>
             تأكيد الإرجاع - {getReturnTotal().toFixed(2)} ج.م
           </ThemedText>
         </TouchableOpacity>
@@ -580,7 +980,6 @@ const styles = StyleSheet.create({
   disabledButton: { backgroundColor: "#9ca3af", opacity: 0.5 },
   submitButtonText: {
     color: "#ffffff",
-    fontWeight: "700",
     fontSize: 14,
   },
 
@@ -604,4 +1003,78 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: { color: "#ffffff", fontWeight: "600", fontSize: 14 },
+
+  // Retry Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  retryModalCard: {
+    width: "100%",
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
+  },
+  retryModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#dc2626",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  retryModalMessage: {
+    fontSize: 13,
+    color: "#374151",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  retryModalHint: {
+    fontSize: 12,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryModalButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  retryModalSecondary: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    alignItems: "center",
+  },
+  retryModalSecondaryText: {
+    fontSize: 13,
+    color: "#374151",
+    fontWeight: "600",
+  },
+  retryModalPrimary: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#dc2626",
+    alignItems: "center",
+  },
+  retryModalPrimaryText: { fontSize: 13, color: "#ffffff", fontWeight: "700" },
+  paymentRetryPrimary: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+  },
+  paymentRetryCancel: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#fee2e2",
+    alignItems: "center",
+  },
+  paymentRetryCancelText: { fontSize: 13, color: "#dc2626", fontWeight: "600" },
 });

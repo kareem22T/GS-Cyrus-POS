@@ -37,7 +37,11 @@ interface UseFawryPaymentReturn {
 
   // Transaction management
   voidTransaction: (fcrn: string) => Promise<VoidResponse>;
-  refundTransaction: (fcrn: string, amount: number) => Promise<RefundResponse>;
+  refundTransaction: (
+    amount: number,
+    orderId: string,
+    fcrn?: string,
+  ) => Promise<RefundResponse>;
   inquireTransaction: (inquiryData: InquiryRequest) => Promise<InquiryResponse>;
 }
 
@@ -200,15 +204,19 @@ export const useFawryPayment = (): UseFawryPaymentReturn => {
   );
 
   const refundTransaction = useCallback(
-    async (fcrn: string, amount: number): Promise<RefundResponse> => {
+    async (
+      amount: number,
+      orderId: string,
+      fcrn?: string,
+    ): Promise<RefundResponse> => {
       try {
         setIsLoading(true);
         setError(null);
 
         const response = await FawryPaymentModule.refundTransaction(
-          fcrn,
+          fcrn ?? "",
           amount,
-          "ORD-1769685480484-hihtw3kqr",
+          orderId,
         );
 
         return response;

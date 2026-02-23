@@ -1,8 +1,16 @@
 import { Document, DocumentItem } from "../../components/receipt-preview-modal";
 
+function parseApiDate(dateString: string): Date {
+  const normalized = dateString
+    ?.replace(/(\.\d{3})\d+/, "$1")
+    ?.replace(/(?<![Z]|[+-]\d{2}:?\d{2})$/, "Z");
+  return new Date(normalized);
+}
+
 export function generateHTMLReceipt(document: Document): string {
   const items: DocumentItem[] =
     (document?.items as DocumentItem[] | undefined) ??
+    (document as any)?.lines ??
     (document as any)?.receiptItems ??
     [];
 
@@ -20,11 +28,16 @@ export function generateHTMLReceipt(document: Document): string {
   totalDiscount += document?.extraDiscount || 0;
   const totalAmount = subtotal + totalVAT - totalDiscount;
 
+  const _receiptDate =
+    document.receiptDate ??
+    (document as any)?.createdAt ??
+    new Date().toISOString();
   const receiptNumber =
-    document.receiptNumber ||
-    `REC-${new Date(document.receiptDate).getTime().toString().slice(-8)}`;
+    document.receiptNumber ??
+    (document as any)?.orderNumber ??
+    `REC-${parseApiDate(_receiptDate).getTime().toString().slice(-8)}`;
 
-  const dateObj = new Date(document.receiptDate);
+  const dateObj = parseApiDate(_receiptDate);
   const dateStr = dateObj.toLocaleDateString("ar-EG", {
     year: "numeric",
     month: "2-digit",

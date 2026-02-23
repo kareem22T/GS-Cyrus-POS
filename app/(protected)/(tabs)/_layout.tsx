@@ -15,7 +15,6 @@ export default function TabsLayout() {
           tabBarActiveTintColor: Colors.light.primary,
           tabBarInactiveTintColor: "#6b7280",
           tabBarStyle: {
-            backgroundColor: "#f8fafc",
             borderTopWidth: 1,
             borderTopColor: "#e5e7eb",
             borderBottomWidth: 0,
@@ -42,19 +41,49 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="orders"
           options={{
-            title: "الطلبات",
+            href: null,
+            tabBarStyle: { display: "none" },
+          }}
+        />
+
+        <Tabs.Screen
+          name="transactions"
+          options={{
+            title: "المعاملات",
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="receipt" size={size} color={color} />
+              <Ionicons name="list" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="receipts"
+          options={{
+            title: "الإيصالات",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="receipt-outline" size={size} color={color} />
             ),
           }}
         />
         <Tabs.Screen
           name="fawry-settings"
           options={{
-            title: "ربط فوري",
+            title: "الملف الشخصي",
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="card" size={size} color={color} />
+              <Ionicons
+                name="person-circle-outline"
+                size={size}
+                color={color}
+              />
             ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="fawry-connect"
+          options={{
+            href: null,
+            tabBarStyle: { display: "none" },
           }}
         />
 
@@ -122,6 +151,22 @@ export default function TabsLayout() {
 
         <Tabs.Screen
           name="return-order"
+          options={{
+            href: null,
+            tabBarStyle: { display: "none" },
+          }}
+        />
+
+        <Tabs.Screen
+          name="transaction-details"
+          options={{
+            href: null,
+            tabBarStyle: { display: "none" },
+          }}
+        />
+
+        <Tabs.Screen
+          name="receipt-details"
           options={{
             href: null,
             tabBarStyle: { display: "none" },

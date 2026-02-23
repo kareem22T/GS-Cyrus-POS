@@ -24,7 +24,7 @@ export interface PaymentRequest {
 
 export interface PaymentResponse {
   status: "success" | "failed";
-  response: string;
+  response: any;
   fcrn?: string;
 }
 

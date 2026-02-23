@@ -1,13 +1,18 @@
 "use client";
 
+import apiClient from "@/api/client";
 import { Colors } from "@/constants/theme";
 import { useAuthStore } from "@/store/slices/auth.slice";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   I18nManager,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -20,31 +25,54 @@ import { ThemedView } from "../../../components/ui/themed-view";
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
 
-// Static data
-const STATIC_STATS = {
-  sumOfQuantitySR: 1250,
-  sumOfTotalsSR: 45780,
-  sumOfQuantityRR: 87,
-  sumOfTotalsRR: 3420,
-};
-
-const STATIC_BRANCH_NAME = "فرع المعادي";
-const STATIC_DEVICE_ID = "ABC123XYZ789";
+interface MonitoringStats {
+  totalSales: number;
+  totalReturns: number;
+  netSales: number;
+  totalQuantitySold: number;
+  totalQuantityReturned: number;
+}
 
 export default function PosScreen() {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
+
+  const [stats, setStats] = useState<MonitoringStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const res = await apiClient.get("/api/pos/monitoring");
+      setStats(res.data?.data ?? res.data);
+    } catch {
+      // keep previous value on error
+    } finally {
+      setStatsLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setStatsLoading(true);
+      loadStats();
+    }, [loadStats]),
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadStats();
+  };
+
+  const fmt = (n?: number) =>
+    n == null ? "—" : n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
 
   const handleCreateOrder = () => {
     router.push("/(protected)/(tabs)/create-order");
   };
 
   const handleViewOrders = () => {
-    router.push("/(protected)/(tabs)/orders");
-  };
-
-  const handleChangeBranch = () => {
-    // Handle branch change
-    console.log("Change branch clicked");
+    router.push("/(protected)/(tabs)/transactions");
   };
 
   const handleLogout = () => {
@@ -70,11 +98,11 @@ export default function PosScreen() {
         <ThemedView style={styles.header}>
           <ThemedView style={styles.headerInfo}>
             <ThemedText style={styles.branchName} type="subtitle">
-              {STATIC_BRANCH_NAME}
+              {user?.branchName ?? "الرئيسية"}
             </ThemedText>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <ThemedText style={styles.deviceId}>
-                {STATIC_DEVICE_ID}
+                {user?.deviceSerial ?? ""}
               </ThemedText>
             </View>
           </ThemedView>
@@ -85,89 +113,68 @@ export default function PosScreen() {
       </View>
       <View style={styles.line}></View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           إحصائيات اليوم
         </ThemedText>
 
-        <View>
-          <ThemedView style={styles.statsContainer}>
-            {/* Total Sales Card */}
-            <Card style={[styles.statCard, styles.totalCard]}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                }}
-              >
-                <Ionicons name="cash" size={22} color="#fff" />
-                <ThemedText type="title" style={styles.statValue}>
-                  {STATIC_STATS.sumOfTotalsSR.toLocaleString()} EGP
+        {statsLoading && !stats ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.light.primary} />
+          </View>
+        ) : (
+          <View>
+            <ThemedView style={styles.statsContainer}>
+              {/* Total Sales */}
+              <Card style={[styles.statCard, styles.salesCard]}>
+                <View style={styles.statIconRow}>
+                  <Ionicons name="trending-up" size={20} color="#fff" />
+                  <ThemedText type="title" style={styles.statValue}>
+                    {fmt(stats?.totalSales)}
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.statLabel}>مبيعات اليوم</ThemedText>
+                <ThemedText style={styles.statSub}>
+                  كمية: {fmt(stats?.totalQuantitySold)}
                 </ThemedText>
-              </View>
-              <ThemedText style={styles.statLabel}>إجمالي المبيعات</ThemedText>
-            </Card>
-            <Card style={[styles.statCard, styles.totalCard]}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                }}
-              >
-                <FontAwesome6 name="jar" size={24} color="#fff" />
-                <ThemedText type="title" style={styles.statValue}>
-                  {STATIC_STATS.sumOfQuantitySR.toLocaleString()}
-                </ThemedText>
-              </View>
-              <ThemedText style={styles.statLabel}>
-                إجمالي كمية المبيعات
-              </ThemedText>
-            </Card>
-          </ThemedView>
-          <ThemedView style={styles.statsContainer}>
-            {/* Returns Card */}
-            <Card style={[styles.statCard, styles.totalCard]}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                }}
-              >
-                <Ionicons name="cash" size={22} color="#fff" />
-                <ThemedText type="title" style={styles.statValue}>
-                  {STATIC_STATS.sumOfTotalsRR.toLocaleString()} EGP
-                </ThemedText>
-              </View>
-              <ThemedText style={styles.statLabel}>إجمالي المرتجعات</ThemedText>
-            </Card>
+              </Card>
 
-            {/* Returns Quantity Card */}
-            <Card style={[styles.statCard, styles.totalCard]}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                }}
-              >
-                <FontAwesome6 name="jar" size={24} color="#fff" />
-                <ThemedText type="title" style={styles.statValue}>
-                  {STATIC_STATS.sumOfQuantityRR.toLocaleString()}
+              {/* Total Returns */}
+              <Card style={[styles.statCard, styles.returnsCard]}>
+                <View style={styles.statIconRow}>
+                  <Ionicons name="trending-down" size={20} color="#fff" />
+                  <ThemedText type="title" style={styles.statValue}>
+                    {fmt(stats?.totalReturns)}
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.statLabel}>مرتجعات اليوم</ThemedText>
+                <ThemedText style={styles.statSub}>
+                  كمية: {fmt(stats?.totalQuantityReturned)}
+                </ThemedText>
+              </Card>
+            </ThemedView>
+
+            {/* Net Sales — full width */}
+            <Card style={[styles.statCardWide, styles.netCard]}>
+              <View style={styles.statIconRow}>
+                <FontAwesome6 name="sack-dollar" size={18} color="#fff" />
+                <ThemedText
+                  type="title"
+                  style={[styles.statValue, { fontSize: 22 }]}
+                >
+                  {fmt(stats?.netSales)} ج.م
                 </ThemedText>
               </View>
-              <ThemedText style={styles.statLabel}>
-                إجمالي كمية المرتجعات
-              </ThemedText>
+              <ThemedText style={styles.statLabel}>صافي المبيعات</ThemedText>
             </Card>
-          </ThemedView>
-        </View>
+          </View>
+        )}
 
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           إجراءات سريعة
@@ -206,7 +213,7 @@ export default function PosScreen() {
             </View>
             <ThemedView style={styles.actionTextContainer}>
               <ThemedText style={styles.actionButtonText} type="subtitle">
-                عرض الطلبات
+                عرض المعاملات
               </ThemedText>
               <ThemedText style={styles.actionButtonSubtext}>
                 تصفح جميع الطلبات
@@ -270,56 +277,55 @@ const styles = StyleSheet.create({
     color: "#1e293b",
   },
   loadingContainer: {
-    padding: 40,
+    paddingVertical: 40,
     alignItems: "center",
     justifyContent: "center",
   },
   statsContainer: {
     gap: 16,
     flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 32,
+    marginBottom: 16,
   },
   statCard: {
     padding: 16,
     borderRadius: 16,
     flex: 1,
   },
-  totalCard: {
+  statCardWide: {
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 28,
+  },
+  salesCard: {
     backgroundColor: Colors.light.primary,
   },
-  taxCard: {
-    backgroundColor: Colors.light.primary,
-  },
-  discountCard: {
+  returnsCard: {
     backgroundColor: "#ef4444",
   },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
+  netCard: {
+    backgroundColor: "#059669",
+  },
+  statIconRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    gap: 8,
+    marginBottom: 8,
   },
   statValue: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#ffffffff",
+    color: "#ffffff",
+    flexShrink: 1,
   },
   statLabel: {
     fontSize: 12,
-    color: "#eeeeeeff",
-    fontWeight: "600",
+    color: "#eeeeee",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginTop: -5,
+  },
+  statSub: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.75)",
+    marginTop: 4,
   },
   actionCard: {
     borderRadius: 16,

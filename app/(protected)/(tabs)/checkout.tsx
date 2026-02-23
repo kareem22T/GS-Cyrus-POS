@@ -1,14 +1,15 @@
 import apiClient from "@/api/client";
 import { Colors } from "@/constants/theme";
 import { useFawryPayment } from "@/hooks/useFawryPayment";
+import { useAuthStore } from "@/store/slices/auth.slice";
 import { useCartStore } from "@/store/slices/cart.slice";
 import { useFawryStore } from "@/store/slices/fawry.slice";
-import { AxiosError } from "axios";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  I18nManager,
+  Modal,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -21,9 +22,52 @@ import { ThemedText } from "../../../components/ui/themed-text";
 import { ThemedView } from "../../../components/ui/themed-view";
 import { BTC_CODES } from "../../../types/fawry.types";
 
-I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
+// ─── Step labels ──────────────────────────────────────────────────────────────
+type Step =
+  | "idle"
+  | "creating_order"
+  | "fawry_payment"
+  | "reporting_payment"
+  | "generating_receipt"
+  | "done";
 
+function getStepLabel(
+  step: Step,
+  paymentMethod: "cash" | "visa" | null,
+): string {
+  switch (step) {
+    case "creating_order":
+      return "جاري إنشاء الطلب...";
+    case "fawry_payment":
+      return "جاري الدفع بالبطاقة...";
+    case "reporting_payment":
+      return "جاري تأكيد الدفع...";
+    case "generating_receipt":
+      return "جاري إنشاء الإيصال...";
+    default:
+      return paymentMethod === "visa"
+        ? "إتمام الطلب بالبطاقة"
+        : "إتمام الطلب ومعاينة الإيصال";
+  }
+}
+
+// ─── Error message helpers ────────────────────────────────────────────────────
+function parseApiError(err: any): string {
+  const data = err?.response?.data;
+  if (!data) return err?.message || "حدث خطأ غير معروف";
+  if (Array.isArray(data?.messages) && data.messages.length > 0)
+    return data.messages[0];
+  if (data?.errors && typeof data.errors === "object") {
+    const firstKey = Object.keys(data.errors)[0];
+    const msgs = data.errors[firstKey];
+    if (Array.isArray(msgs) && msgs.length > 0) return msgs[0];
+  }
+  if (data?.title) return data.title;
+  if (typeof data === "string") return data;
+  return err?.message || "حدث خطأ غير معروف";
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function CheckoutScreen() {
   const cart = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.getSubtotal)();
@@ -31,27 +75,86 @@ export default function CheckoutScreen() {
   const total = useCartStore((s) => s.getTotal)();
   const clearCart = useCartStore((s) => s.clearCart);
 
+  const deviceSerial = useAuthStore((s) => s.user?.deviceSerial ?? "");
+
   const [selectedPayment, setSelectedPayment] = useState<
     "cash" | "visa" | null
   >(null);
-  const [processing, setProcessing] = useState(false);
+  const [step, setStep] = useState<Step>("idle");
   const [showPreview, setShowPreview] = useState(false);
-  const [createdDocument, setCreatedDocument] = useState<any | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<any | null>(null);
   const [customerName, setCustomerName] = useState("");
-  const [deviceId] = useState<string>("2034082646");
+  const [extraDiscount, setExtraDiscount] = useState("0");
 
-  // ✅ Read connection state from the global Zustand store — same instance as FawryAutoConnect & Settings
+  // Retry modal for generate-receipt failures
+  const [retryModalVisible, setRetryModalVisible] = useState(false);
+  const [retryError, setRetryError] = useState("");
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+  const [generateRetryExpired, setGenerateRetryExpired] = useState(false);
+
+  // Retry modal for Fawry payment failures (order exists but payment failed)
+  const [paymentRetryModalVisible, setPaymentRetryModalVisible] =
+    useState(false);
+  const [paymentRetryError, setPaymentRetryError] = useState("");
+  const [pendingVisaOrderId, setPendingVisaOrderId] = useState<number | null>(
+    null,
+  );
+  const [pendingVisaOrderNumber, setPendingVisaOrderNumber] =
+    useState<string>("");
+  const [pendingVisaAmount, setPendingVisaAmount] = useState<number>(0);
+
   const isFawryConnected = useFawryStore((s) => s.isConnected);
+  const { processCardPayment } = useFawryPayment();
 
-  // useFawryPayment is only used here for its processCardPayment method
-  const { isLoading: isFawryLoading, processCardPayment } = useFawryPayment();
+  const isProcessing = step !== "idle" && step !== "done";
 
+  // ─── Step 3: Generate receipt ───────────────────────────────────────────────
+  const generateReceipt = async (orderId: number): Promise<boolean> => {
+    setStep("generating_receipt");
+    setGenerateRetryExpired(false);
+    try {
+      const res = await apiClient.post(
+        `/api/pos/orders/${orderId}/generate-receipt`,
+      );
+      if (res.data?.succeeded) {
+        setCreatedOrder(res.data.data);
+        setStep("done");
+        setShowPreview(true);
+        return true;
+      }
+      const msg = res.data?.messages?.[0] || "فشل في إنشاء الإيصال";
+      setPendingOrderId(orderId);
+      setRetryError(msg);
+      setRetryModalVisible(true);
+      setStep("idle");
+      return false;
+    } catch (err: any) {
+      const httpStatus = err?.response?.status;
+      if (httpStatus === 409) {
+        Alert.alert("تنبيه", "تم إنشاء هذا الإيصال مسبقاً");
+        setStep("idle");
+        return true;
+      }
+      // 422 = order expired or wrong status — no retry possible
+      const isExpired = httpStatus === 422;
+      const msg = isExpired
+        ? "انتهت صلاحية الطلب — لا يمكن إنشاء الإيصال بعد الآن."
+        : parseApiError(err);
+      setPendingOrderId(orderId);
+      setRetryError(msg);
+      setGenerateRetryExpired(isExpired);
+      setRetryModalVisible(true);
+      setStep("idle");
+      return false;
+    }
+  };
+
+  // ─── Main payment handler ───────────────────────────────────────────────────
   const handlePayment = async () => {
     if (!selectedPayment) {
       Alert.alert("طريقة الدفع مطلوبة", "الرجاء اختيار طريقة الدفع");
       return;
     }
-
     if (selectedPayment === "visa" && !isFawryConnected) {
       Alert.alert(
         "جهاز فوري غير متصل",
@@ -60,101 +163,226 @@ export default function CheckoutScreen() {
       return;
     }
 
-    setProcessing(true);
+    const extraDiscountNum = parseFloat(extraDiscount) || 0;
+    if (extraDiscountNum < 0) {
+      Alert.alert("خطأ", "قيمة الخصم الإضافي يجب أن تكون صفراً أو أكبر");
+      return;
+    }
+
+    // ─── Step 1: Create order ─────────────────────────────────────────────────
+    setStep("creating_order");
+    let orderId: number;
+    let orderNumber: string;
 
     try {
-      // 1️⃣ Create the order in the backend
-      const now = new Date();
-      const pad = (v: number, len = 2) => String(v).padStart(len, "0");
-      const receiptDateLocal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${String(now.getMilliseconds()).padStart(3, "0")}`;
-
-      const payload: any = {
-        deviceSerial: deviceId,
-        receiptDate: receiptDateLocal,
-        customerName: customerName || "WALK-IN",
+      const payload = {
         items: cart.map((item: any) => ({
           productId: parseInt(item.product.id, 10),
           quantity: item.quantity,
-          unitPrice: item.product.price,
-          lineDiscount: 0,
+          discountAmount: 0,
         })),
-        extraDiscount: 0,
-        paymentMethod: selectedPayment === "cash" ? 0 : 1,
+        paymentMethod: selectedPayment === "cash" ? "Cash" : "Visa",
+        customerName: customerName.trim() || "WALK-IN",
+        extraDiscount: extraDiscountNum,
+        notes: "",
       };
 
-      const res = await apiClient.post("/api/receipts", payload);
+      const res = await apiClient.post("/api/pos/orders", payload);
 
       if (!res.data?.succeeded || !res.data?.data) {
-        console.warn("create receipt failed", res.data);
-        Alert.alert("خطأ", "فشل في إنشاء الطلب");
-        setProcessing(false);
+        const msg = res.data?.messages?.[0] || "فشل في إنشاء الطلب";
+        Alert.alert("فشل إنشاء الطلب", msg);
+        setStep("idle");
         return;
       }
 
-      const document = res.data.data;
-      const receiptNumber: string = String(
-        document?.receiptNumber || document?.id || `ORD-${Date.now()}`,
-      );
-      setCreatedDocument(document);
-
-      // 2️⃣ If visa: trigger Fawry card payment using receipt number as order ref
-      if (selectedPayment === "visa") {
-        try {
-          const fawryResponse = await processCardPayment(
-            parseFloat(String(total)),
-            receiptNumber,
-            BTC_CODES.CARD_PAYMENT,
-          );
-
-          if (fawryResponse.status === "success") {
-            const fcrn = fawryResponse.fcrn
-              ? `\nFCRN: ${fawryResponse.fcrn}`
-              : "";
-            Alert.alert(
-              "تم الدفع بالبطاقة",
-              `تم الدفع بنجاح!\nرقم الإيصال: ${receiptNumber}${fcrn}`,
-            );
-          } else {
-            Alert.alert(
-              "تحذير",
-              "تم إنشاء الطلب لكن فشلت عملية الدفع بالبطاقة. يرجى التحقق من جهاز فوري.",
-            );
-          }
-        } catch (fawryErr: any) {
-          Alert.alert(
-            "تحذير",
-            `تم إنشاء الطلب لكن فشلت عملية الدفع بالبطاقة:\n${fawryErr?.message || "خطأ غير معروف"}`,
-          );
-        }
-      } else {
-        const msg = res.data?.messages?.[0] || "تم إنشاء الإيصال";
-        Alert.alert("تم إنشاء الإيصال", `${msg}\nرقم: ${receiptNumber}`);
-      }
-
-      setProcessing(false);
-      setShowPreview(true);
+      orderId = res.data.data.id;
+      orderNumber = res.data.data.orderNumber;
     } catch (err: any) {
-      setProcessing(false);
-
-      const axiosErr = err as AxiosError;
-      const status = axiosErr?.response?.status;
-      const raw = axiosErr?.response?.data as any;
-      const serverMessage =
-        raw?.message ||
-        (Array.isArray(raw?.messages) && raw.messages[0]) ||
-        raw?.error ||
-        (typeof raw === "string" ? raw : undefined) ||
-        axiosErr?.message ||
-        "حدث خطأ أثناء معالجة الطلب";
-
-      console.error("Checkout error", {
-        status,
-        data: raw,
-        serverMessage,
-        err,
-      });
-      Alert.alert("فشل في إتمام الطلب", serverMessage);
+      Alert.alert("فشل إنشاء الطلب", parseApiError(err));
+      setStep("idle");
+      return;
     }
+
+    // ─── Cash flow ────────────────────────────────────────────────────────────
+    if (selectedPayment === "cash") {
+      await generateReceipt(orderId);
+      return;
+    }
+
+    // ─── Visa flow ─────────────────────────────────────────────────────────────
+    setStep("fawry_payment");
+    let fcrn: string | undefined;
+    let rawResponse: string;
+    let paymentStatus: "Success" | "Failed" = "Failed";
+
+    try {
+      const fawryResponse = await processCardPayment(
+        parseFloat(String(total)),
+        orderNumber,
+        BTC_CODES.CARD_PAYMENT,
+      );
+      rawResponse = JSON.stringify(fawryResponse);
+      paymentStatus = fawryResponse.status === "success" ? "Success" : "Failed";
+      fcrn = JSON.parse(fawryResponse.response)?.body?.fawryReference;
+    } catch (fawryErr: any) {
+      rawResponse = JSON.stringify({ error: fawryErr?.message ?? "unknown" });
+      paymentStatus = "Failed";
+    }
+
+    // ─── Payment failed → show retry modal (order stays PendingPayment) ────────
+    if (paymentStatus === "Failed") {
+      setPendingVisaOrderId(orderId);
+      setPendingVisaOrderNumber(orderNumber);
+      setPendingVisaAmount(parseFloat(String(total)));
+      setPaymentRetryError(
+        "فشلت عملية الدفع بالبطاقة. يمكنك إعادة المحاولة أو إلغاء الطلب.",
+      );
+      setPaymentRetryModalVisible(true);
+      setStep("idle");
+      return;
+    }
+
+    // ─── Payment succeeded → report Success to backend ─────────────────────────
+    setStep("reporting_payment");
+    try {
+      const resultRes = await apiClient.post(
+        `/api/pos/orders/${orderId}/payment-result`,
+        {
+          status: "Success",
+          externalReference: fcrn ?? `FAWRY-${Date.now()}`,
+          rawResponse,
+        },
+      );
+      const resultStatus: string = resultRes.data?.data?.status ?? "";
+      if (resultStatus === "Failed") {
+        // Backend unexpectedly rejected the confirmation — allow retry
+        setPendingVisaOrderId(orderId);
+        setPendingVisaOrderNumber(orderNumber);
+        setPendingVisaAmount(parseFloat(String(total)));
+        setPaymentRetryError(
+          resultRes.data?.messages?.[0] ||
+            "رفض الخادم تأكيد الدفع. يمكنك إعادة المحاولة.",
+        );
+        setPaymentRetryModalVisible(true);
+        setStep("idle");
+        return;
+      }
+    } catch (err: any) {
+      const httpStatus = err?.response?.status;
+      if (httpStatus !== 409) {
+        // 409 = reference already used but payment recorded → still proceed to generate
+        setPendingVisaOrderId(orderId);
+        setPendingVisaOrderNumber(orderNumber);
+        setPendingVisaAmount(parseFloat(String(total)));
+        setPaymentRetryError(parseApiError(err));
+        setPaymentRetryModalVisible(true);
+        setStep("idle");
+        return;
+      }
+    }
+
+    await generateReceipt(orderId);
+  };
+
+  const handleRetry = async () => {
+    if (!pendingOrderId) return;
+    setRetryModalVisible(false);
+    await generateReceipt(pendingOrderId);
+  };
+
+  // ─── Retry Fawry payment on the existing pending order ──────────────────────
+  const retryFawryPayment = async () => {
+    if (!pendingVisaOrderId || !pendingVisaOrderNumber) return;
+    setPaymentRetryModalVisible(false);
+    setStep("fawry_payment");
+
+    let fcrn: string | undefined;
+    let rawResponse: string;
+    let paymentStatus: "Success" | "Failed" = "Failed";
+
+    try {
+      const fawryResponse = await processCardPayment(
+        pendingVisaAmount,
+        pendingVisaOrderNumber,
+        BTC_CODES.CARD_PAYMENT,
+      );
+      rawResponse = JSON.stringify(fawryResponse);
+      paymentStatus = fawryResponse.status === "success" ? "Success" : "Failed";
+      fcrn = JSON.parse(fawryResponse.response)?.body?.fawryReference;
+    } catch (fawryErr: any) {
+      rawResponse = JSON.stringify({ error: fawryErr?.message ?? "unknown" });
+      paymentStatus = "Failed";
+    }
+
+    if (paymentStatus === "Failed") {
+      setPaymentRetryError(
+        "فشلت عملية الدفع مجدداً. تأكد من اتصال الجهاز وصلاحية البطاقة.",
+      );
+      setPaymentRetryModalVisible(true);
+      setStep("idle");
+      return;
+    }
+
+    // Payment succeeded — report to backend
+    setStep("reporting_payment");
+    const orderIdToGenerate = pendingVisaOrderId;
+    try {
+      const resultRes = await apiClient.post(
+        `/api/pos/orders/${pendingVisaOrderId}/payment-result`,
+        {
+          status: "Success",
+          externalReference: fcrn ?? `FAWRY-${Date.now()}`,
+          rawResponse,
+        },
+      );
+      const resultStatus: string = resultRes.data?.data?.status ?? "";
+      if (resultStatus === "Failed") {
+        setPaymentRetryError(
+          resultRes.data?.messages?.[0] ||
+            "رفض الخادم تأكيد الدفع. يمكنك إعادة المحاولة.",
+        );
+        setPaymentRetryModalVisible(true);
+        setStep("idle");
+        return;
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 409) {
+        setPaymentRetryError(parseApiError(err));
+        setPaymentRetryModalVisible(true);
+        setStep("idle");
+        return;
+      }
+      // 409 = already recorded → proceed to generate
+    }
+
+    // Clear pending visa state then generate receipt
+    setPendingVisaOrderId(null);
+    setPendingVisaOrderNumber("");
+    await generateReceipt(orderIdToGenerate);
+  };
+
+  // ─── Cancel pending payment: report Failed to backend and navigate away ─────
+  const cancelPendingPayment = async () => {
+    if (pendingVisaOrderId) {
+      try {
+        await apiClient.post(
+          `/api/pos/orders/${pendingVisaOrderId}/payment-result`,
+          {
+            status: "Failed",
+            externalReference: `CANCELLED-${Date.now()}`,
+            rawResponse: JSON.stringify({ cancelled: true }),
+          },
+        );
+      } catch {
+        // Best-effort — ignore errors
+      }
+    }
+    setPaymentRetryModalVisible(false);
+    setPendingVisaOrderId(null);
+    setPendingVisaOrderNumber("");
+    setStep("idle");
+    router.replace("/(protected)/(tabs)/transactions");
   };
 
   const handlePreviewComplete = () => {
@@ -166,8 +394,8 @@ export default function CheckoutScreen() {
         onPress: () => router.replace("/(protected)/(tabs)/create-order"),
       },
       {
-        text: "لوحة التحكم",
-        onPress: () => router.replace("/(protected)/(tabs)/pos"),
+        text: "الإيصالات",
+        onPress: () => router.replace("/(protected)/(tabs)/receipts"),
       },
     ]);
   };
@@ -179,8 +407,12 @@ export default function CheckoutScreen() {
           <ThemedText type="title">الدفع</ThemedText>
           <ThemedText style={styles.subtitle}>أكمل عملية الدفع</ThemedText>
         </ThemedView>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ThemedText style={styles.backText}>رجوع ←</ThemedText>
+        <TouchableOpacity onPress={() => router.back()} disabled={isProcessing}>
+          <ThemedText
+            style={[styles.backText, isProcessing && { opacity: 0.4 }]}
+          >
+            رجوع ←
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
 
@@ -197,7 +429,7 @@ export default function CheckoutScreen() {
             </ThemedText>
           </ThemedView>
           <ThemedView style={styles.summaryRow}>
-            <ThemedText style={styles.summaryLabel}>الضريبة (14%):</ThemedText>
+            <ThemedText style={styles.summaryLabel}>الضريبة:</ThemedText>
             <ThemedText style={styles.summaryValue}>
               {tax ?? "0.00"} ج.م
             </ThemedText>
@@ -222,6 +454,7 @@ export default function CheckoutScreen() {
               selectedPayment === "cash" && styles.selectedPayment,
             ]}
             onPress={() => setSelectedPayment("cash")}
+            disabled={isProcessing}
           >
             <ThemedView style={styles.paymentContent}>
               <ThemedView style={styles.paymentIcon}>
@@ -249,15 +482,14 @@ export default function CheckoutScreen() {
               selectedPayment === "visa" && styles.selectedPayment,
             ]}
             onPress={() => setSelectedPayment("visa")}
+            disabled={isProcessing}
           >
             <ThemedView style={styles.paymentContent}>
               <ThemedView style={styles.paymentIcon}>
                 <ThemedText style={styles.iconText}>💳</ThemedText>
               </ThemedView>
               <ThemedView style={styles.paymentInfo}>
-                <ThemedText style={styles.paymentMethodText}>
-                  بطاقة فيزا
-                </ThemedText>
+                <ThemedText style={styles.paymentMethodText}>بطاقة</ThemedText>
                 <ThemedText style={styles.paymentDescription}>
                   {isFawryConnected
                     ? "جهاز فوري متصل ✓"
@@ -282,19 +514,27 @@ export default function CheckoutScreen() {
           )}
         </Card>
 
-        {/* Customer Info */}
+        {/* Customer Info & Extra Discount */}
         <Card style={styles.customerCard}>
           <ThemedText style={styles.cardTitle}>معلومات العميل</ThemedText>
           <TextInput
-            placeholder="اسم العميل"
+            placeholder="اسم العميل (اختياري — سيُستخدم WALK-IN إذا تُرك فارغاً)"
             placeholderTextColor="#9ca3af"
             value={customerName}
             onChangeText={setCustomerName}
             style={styles.input}
+            editable={!isProcessing}
           />
-          <ThemedText style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-            يمكنك ترك الاسم فارغًا لاستخدام WALK-IN
-          </ThemedText>
+          <ThemedText style={styles.cardTitle}>خصم إضافي (ج.م)</ThemedText>
+          <TextInput
+            placeholder="0"
+            placeholderTextColor="#9ca3af"
+            value={extraDiscount}
+            onChangeText={setExtraDiscount}
+            keyboardType="numeric"
+            style={styles.input}
+            editable={!isProcessing}
+          />
         </Card>
 
         <ThemedView style={{ height: 100 }} />
@@ -305,29 +545,126 @@ export default function CheckoutScreen() {
         <TouchableOpacity
           style={[
             styles.checkoutButton,
-            (processing || isFawryLoading) && styles.checkoutButtonDisabled,
+            isProcessing && styles.checkoutButtonDisabled,
           ]}
           onPress={handlePayment}
-          disabled={processing || isFawryLoading}
+          disabled={isProcessing}
         >
-          <ThemedText type="subtitle" style={styles.checkoutText}>
-            {processing
-              ? selectedPayment === "visa"
-                ? "جارٍ الدفع بالبطاقة..."
-                : "جاري المعالجة..."
-              : "إتمام الطلب ومعاينة الإيصال"}
-          </ThemedText>
+          {isProcessing ? (
+            <ThemedView style={styles.processingRow}>
+              <ActivityIndicator size="small" color="#ffffff" />
+              <ThemedText type="subtitle" style={styles.checkoutText}>
+                {getStepLabel(step, selectedPayment)}
+              </ThemedText>
+            </ThemedView>
+          ) : (
+            <ThemedText type="subtitle" style={styles.checkoutText}>
+              {getStepLabel(step, selectedPayment)}
+            </ThemedText>
+          )}
         </TouchableOpacity>
       </ThemedView>
 
-      {createdDocument && (
+      {createdOrder && (
         <ReceiptPreviewModal
           visible={showPreview}
-          document={createdDocument as any}
+          document={createdOrder}
           onClose={() => setShowPreview(false)}
           onComplete={handlePreviewComplete}
         />
       )}
+
+      {/* Generate Receipt Retry Modal */}
+      <Modal
+        visible={retryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          !generateRetryExpired && setRetryModalVisible(false)
+        }
+      >
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <ThemedText style={styles.modalTitle}>
+              {generateRetryExpired
+                ? "⏰ انتهت صلاحية الطلب"
+                : "⚠️ فشل إنشاء الإيصال"}
+            </ThemedText>
+            <ThemedText style={styles.modalMessage}>{retryError}</ThemedText>
+            <ThemedText style={styles.modalHint}>
+              {generateRetryExpired
+                ? "تم الدفع بنجاح لكن انتهت صلاحية الطلب. يرجى مراجعة المعاملات أو التواصل مع الدعم."
+                : "الطلب تم إنشاؤه وتسجيل الدفع بنجاح. يمكنك إعادة المحاولة لإنشاء الإيصال."}
+            </ThemedText>
+            <ThemedView style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.supportButton]}
+                onPress={() => {
+                  setRetryModalVisible(false);
+                  setStep("idle");
+                  router.replace("/(protected)/(tabs)/transactions");
+                }}
+              >
+                <ThemedText style={styles.supportButtonText}>
+                  عرض المعاملات
+                </ThemedText>
+              </TouchableOpacity>
+              {!generateRetryExpired && (
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.retryButton]}
+                  onPress={handleRetry}
+                >
+                  <ThemedText style={styles.retryButtonText}>
+                    إعادة المحاولة
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
+
+      {/* Payment Retry Modal — Fawry payment failed but order exists */}
+      <Modal
+        visible={paymentRetryModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <ThemedText style={styles.modalTitle}>
+              💳 فشل الدفع بالبطاقة
+            </ThemedText>
+            <ThemedText style={styles.modalMessage}>
+              {paymentRetryError}
+            </ThemedText>
+            {pendingVisaOrderNumber ? (
+              <ThemedText style={styles.modalHint}>
+                {`الطلب #${pendingVisaOrderNumber} تم إنشاؤه وهو في انتظار الدفع. يمكنك إعادة محاولة الدفع أو إلغاء الطلب.`}
+              </ThemedText>
+            ) : null}
+            <ThemedView style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelPaymentButton]}
+                onPress={cancelPendingPayment}
+              >
+                <ThemedText style={styles.cancelPaymentButtonText}>
+                  إلغاء الطلب
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.retryButton]}
+                onPress={retryFawryPayment}
+              >
+                <ThemedText style={styles.retryButtonText}>
+                  إعادة الدفع
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -368,7 +705,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e8eaed",
   },
-  cardTitle: { fontSize: 16, marginBottom: 8, color: "#1f2937" },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    color: "#1f2937",
+  },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -457,6 +799,59 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  checkoutButtonDisabled: { backgroundColor: "#93c5fd", opacity: 0.7 },
+  checkoutButtonDisabled: { backgroundColor: "#93c5fd", opacity: 0.8 },
   checkoutText: { color: "#fff", fontSize: 15 },
+  processingRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  // Retry modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
+    padding: 20,
+    width: "100%",
+    maxWidth: 380,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#1f2937",
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: "#dc2626",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  modalHint: {
+    fontSize: 12,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  modalButtons: { flexDirection: "row", gap: 10 },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  supportButton: { backgroundColor: "#f3f4f6" },
+  supportButtonText: { color: "#374151", fontWeight: "600", fontSize: 14 },
+  retryButton: { backgroundColor: "#007AFF" },
+  retryButtonText: { color: "#ffffff", fontWeight: "600", fontSize: 14 },
+  cancelPaymentButton: { backgroundColor: "#fee2e2" },
+  cancelPaymentButtonText: {
+    color: "#dc2626",
+    fontWeight: "600",
+    fontSize: 14,
+  },
 });
