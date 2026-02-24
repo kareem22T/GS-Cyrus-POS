@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">GS Cyrus POS</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="PRINTER_ERROR_PAPERLESS">the printer is out of paper or you use the wrong printer
+    please feed the printer or choose the correct printer from settings screen and try again</string>
+  <string name="PRINTER_TOO_HOT">Printer Too Hot</string>
+  <string name="PRINTER_ERROR_GENERAL">Fail to Print</string>
+</resources>
