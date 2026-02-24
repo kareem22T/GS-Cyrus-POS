@@ -1,24 +1,26 @@
 "use client";
 
 import apiClient from "@/api/client";
+import { useFawryPayment } from "@/hooks/useFawryPayment";
 import {
-    fetchOrderById,
-    getOrderTypeLabel,
-    getPaymentMethodLabel,
-    getPosOrderStatusBg,
-    getPosOrderStatusColor,
-    getPosOrderStatusLabel,
-    PosOrder,
+  fetchOrderById,
+  getOrderTypeLabel,
+  getPaymentMethodLabel,
+  getPosOrderStatusBg,
+  getPosOrderStatusColor,
+  getPosOrderStatusLabel,
+  PosOrder,
 } from "@/lib/orders-api";
+import { useFawryStore } from "@/store/slices/fawry.slice";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ReceiptPreviewModal } from "../../../components/receipt-preview-modal";
@@ -44,9 +46,29 @@ function parseApiDate(dateString: string): Date {
 
 export default function TransactionDetailsScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
+
+  // translate known header status descriptions
+  const translateStatusDesc = (
+    desc: string | undefined | null,
+  ): string | undefined => {
+    if (!desc) return String(desc);
+    switch (desc) {
+      case "Payment.VALUE_PAYMENT_STATUS_REFUNDED":
+        return "تم الارجاع بنجا"; // as requested, keep original phrasing
+      case "Payment.VALUE_PAYMENT_STATUS_SUCCESS":
+        return "تم الدفع بنجاح";
+      case "Payment.VALUE_PAYMENT_STATUS__VOIDED":
+        return "تم الالغاء";
+      default:
+        return desc;
+    }
+  };
   const [order, setOrder] = useState<PosOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isFawryConnected = useFawryStore((s) => s.isConnected);
+  const { inquireTransaction, voidTransaction } = useFawryPayment();
 
   const [generatingReceipt, setGeneratingReceipt] = useState(false);
   const [showReceiptPreview, setShowReceiptPreview] = useState(false);
@@ -55,6 +77,17 @@ export default function TransactionDetailsScreen() {
   // Retry modal
   const [retryModalVisible, setRetryModalVisible] = useState(false);
   const [retryError, setRetryError] = useState("");
+
+  // Fawry inquiry
+  const [inquiryLoading, setInquiryLoading] = useState(false);
+  const [inquiryModalVisible, setInquiryModalVisible] = useState(false);
+  const [inquiryResult, setInquiryResult] = useState<any>(null);
+  const [inquiryError, setInquiryError] = useState<string | null>(null);
+
+  // Fawry void (triggered from inside inquiry modal)
+  const [voidLoading, setVoidLoading] = useState(false);
+  const [voidResult, setVoidResult] = useState<string | null>(null);
+  const [voidError, setVoidError] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrder();
@@ -114,6 +147,91 @@ export default function TransactionDetailsScreen() {
     }
   };
 
+  const formatDateForInq = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+  };
+
+  const handleFawryInquiry = async () => {
+    if (!order) return;
+    if (!isFawryConnected) {
+      Alert.alert("فوري غير متصل", "يجب توصيل جهاز فوري لإجراء الاستعلام.");
+      return;
+    }
+    setInquiryLoading(true);
+    setInquiryError(null);
+    setInquiryResult(null);
+    try {
+      const txDate = parseApiDate(order.createdAt);
+      const fromDate = new Date(txDate);
+      fromDate.setHours(0, 0, 0, 0);
+      const toDate = new Date(txDate);
+      toDate.setHours(23, 59, 59, 0);
+
+      const res = await inquireTransaction({
+        transactionId: order.paymentReference
+          ? order.paymentReference
+          : order.orderNumber,
+        idType: order.paymentReference ? "FCRN" : "ORDER_ID",
+        fromDate: formatDateForInq(fromDate),
+        toDate: formatDateForInq(toDate),
+        printReceipt: false,
+      });
+
+      let parsed: any = res.response;
+      if (typeof parsed === "string") {
+        try {
+          parsed = JSON.parse(parsed);
+        } catch {
+          /* keep as string */
+        }
+      }
+      setInquiryResult(parsed);
+    } catch (err: any) {
+      setInquiryError(err?.message || "فشل الاستعلام عن المعاملة");
+    } finally {
+      setInquiryLoading(false);
+      setInquiryModalVisible(true);
+    }
+  };
+
+  const handleVoidTransaction = async () => {
+    const fcrn = inquiryResult?.body?.fawryReference;
+    if (!fcrn) return;
+    Alert.alert(
+      "تأكيد الإلغاء",
+      `هل أنت متأكد من إلغاء هذه المعاملة عبر فوري؟\nFCRN: ${fcrn}`,
+      [
+        { text: "لا", style: "cancel" },
+        {
+          text: "نعم، إلغاء",
+          style: "destructive",
+          onPress: async () => {
+            setVoidLoading(true);
+            setVoidResult(null);
+            setVoidError(null);
+            try {
+              await voidTransaction(fcrn, order!.orderNumber);
+              setVoidResult("✅ تم إلغاء المعاملة بنجاح عبر فوري");
+              // Reload order so status reflects any backend update
+              const updated = await fetchOrderById(order!.id);
+              if (updated) setOrder(updated);
+            } catch (err: any) {
+              setVoidError(err?.message || "فشل إلغاء المعاملة");
+            } finally {
+              setVoidLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleViewReceipt = () => {
     router.push("/(protected)/(tabs)/receipts");
   };
@@ -171,6 +289,7 @@ export default function TransactionDetailsScreen() {
               ]}
             >
               <ThemedText
+                type="defaultSemiBold"
                 style={[
                   styles.statusText,
                   { color: getPosOrderStatusColor(order.status) },
@@ -185,7 +304,9 @@ export default function TransactionDetailsScreen() {
           </ThemedText>
         </ThemedView>
         <TouchableOpacity onPress={() => router.back()}>
-          <ThemedText style={styles.backText}>رجوع ←</ThemedText>
+          <ThemedText type="defaultSemiBold" style={styles.backText}>
+            رجوع ←
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
 
@@ -280,7 +401,7 @@ export default function TransactionDetailsScreen() {
                   )}
                 </ThemedView>
               </ThemedView>
-              <ThemedText style={styles.itemTotal}>
+              <ThemedText type="subtitle" style={styles.itemTotal}>
                 {line.total.toFixed(2)}
               </ThemedText>
             </ThemedView>
@@ -360,8 +481,170 @@ export default function TransactionDetailsScreen() {
               </ThemedText>
             </ThemedView>
           )}
+
+          {/* Fawry Inquiry Button — only for Sale orders when Fawry is connected */}
+          {order.orderType === "Sale" && isFawryConnected && (
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.inquiryButton,
+                inquiryLoading && { opacity: 0.6 },
+              ]}
+              onPress={handleFawryInquiry}
+              disabled={inquiryLoading}
+            >
+              {inquiryLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <ThemedText style={styles.actionButtonText}>
+                  🔍 استعلام فوري
+                </ThemedText>
+              )}
+            </TouchableOpacity>
+          )}
         </ThemedView>
       </ScrollView>
+
+      {/* Fawry Inquiry Result Modal */}
+      <Modal
+        visible={inquiryModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setInquiryModalVisible(false)}
+      >
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView style={[styles.modalContent, { maxHeight: "80%" }]}>
+            <ThemedText type="subtitle" style={styles.modalTitle}>
+              {inquiryError ? "⚠️ فشل الاستعلام" : "🔍 نتيجة استعلام فوري"}
+            </ThemedText>
+
+            {inquiryError ? (
+              <ThemedText style={styles.modalMessage}>
+                {inquiryError}
+              </ThemedText>
+            ) : (
+              <ScrollView
+                style={{ marginBottom: 12 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {inquiryResult?.body ? (
+                  <ThemedView style={styles.inquiryBody}>
+                    {[
+                      ["رقم FCRN", inquiryResult.body.fawryReference],
+                      [
+                        "رقم الطلب",
+                        inquiryResult.body.merchantRefNumber ??
+                          order?.orderNumber,
+                      ],
+                      // status from header if available
+                      [
+                        "حالة الاستجابة",
+                        translateStatusDesc(
+                          inquiryResult.header?.status?.statusDesc,
+                        ) || inquiryResult.header?.status?.statusCode,
+                      ],
+                      ["الحالة", inquiryResult.body.transactionStatus],
+                      ["نوع العملية", inquiryResult.body.transactionType],
+                      [
+                        "طريقة الدفع",
+                        inquiryResult.body.paymentMethod ||
+                          inquiryResult.body.paymentOption,
+                      ],
+                      [
+                        "المبلغ",
+                        (inquiryResult.body.paymentAmount != null
+                          ? inquiryResult.body.paymentAmount
+                          : inquiryResult.body.amount) != null
+                          ? `${
+                              inquiryResult.body.paymentAmount ??
+                              inquiryResult.body.amount
+                            } ج.م`
+                          : undefined,
+                      ],
+                      ["التاريخ", inquiryResult.body.transactionDate],
+                      [
+                        "رسالة",
+                        inquiryResult.body.statusDescription ??
+                          inquiryResult.body.description,
+                      ],
+                    ]
+                      .filter(([, v]) => v != null && v !== "")
+                      .map(([label, value], i) => (
+                        <ThemedView key={i} style={styles.inquiryRow}>
+                          <ThemedText style={styles.inquiryLabel}>
+                            {label}
+                          </ThemedText>
+                          <ThemedText style={styles.inquiryValue}>
+                            {String(value ?? "")}
+                          </ThemedText>
+                        </ThemedView>
+                      ))}
+                  </ThemedView>
+                ) : (
+                  <ThemedText style={styles.inquiryRaw}>
+                    {typeof inquiryResult === "string"
+                      ? inquiryResult
+                      : JSON.stringify(inquiryResult, null, 2)}
+                  </ThemedText>
+                )}
+              </ScrollView>
+            )}
+
+            {/* Void button: order not paid locally but Fawry says SUCCESS */}
+            {!inquiryError &&
+              order?.status !== "Paid" &&
+              order?.orderType === "Sale" &&
+              inquiryResult?.header?.status?.statusDesc ===
+                "Payment.VALUE_PAYMENT_STATUS_SUCCESS" &&
+              inquiryResult?.body?.fawryReference &&
+              !voidResult && (
+                <TouchableOpacity
+                  style={[
+                    styles.actionButton,
+                    styles.voidButton,
+                    { marginBottom: 8 },
+                    voidLoading && { opacity: 0.6 },
+                  ]}
+                  onPress={handleVoidTransaction}
+                  disabled={voidLoading}
+                >
+                  {voidLoading ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <ThemedText style={styles.actionButtonText}>
+                      ❌ إلغاء المعاملة عبر فوري
+                    </ThemedText>
+                  )}
+                </TouchableOpacity>
+              )}
+
+            {voidResult && (
+              <ThemedView style={styles.voidSuccessBox}>
+                <ThemedText style={styles.voidSuccessText}>
+                  {voidResult}
+                </ThemedText>
+              </ThemedView>
+            )}
+
+            {voidError && (
+              <ThemedText style={[styles.modalMessage, { marginBottom: 8 }]}>
+                ⚠️ {voidError}
+              </ThemedText>
+            )}
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.retryMBtn, { marginTop: 4 }]}
+              onPress={() => {
+                setInquiryModalVisible(false);
+                setVoidResult(null);
+                setVoidError(null);
+              }}
+            >
+              <ThemedText style={styles.retryMBtnText}>إغلاق</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
 
       {receiptOrder && (
         <ReceiptPreviewModal
@@ -429,9 +712,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  statusText: { fontSize: 11, fontWeight: "600" },
+  statusText: { fontSize: 11 },
   subtitle: { opacity: 0.6, fontSize: 12 },
-  backText: { color: "#007AFF", fontWeight: "600", fontSize: 14 },
+  backText: { color: "#007AFF", fontSize: 14 },
 
   content: { flex: 1, padding: 12 },
 
@@ -446,16 +729,15 @@ const styles = StyleSheet.create({
   infoGrid: { flexDirection: "row", gap: 8, marginBottom: 8 },
   infoItem: { flex: 1 },
   infoLabel: { fontSize: 11, opacity: 0.6, marginBottom: 3 },
-  infoValue: { fontSize: 12, fontWeight: "600", color: "#1f2937" },
+  infoValue: { fontSize: 12, color: "#1f2937" },
   divider: { height: 1, backgroundColor: "#f3f4f6", marginVertical: 10 },
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   detailItem: { flex: 1, minWidth: "45%" },
   detailLabel: { fontSize: 11, opacity: 0.6, marginBottom: 2 },
-  detailValue: { fontSize: 13, fontWeight: "500", color: "#1f2937" },
+  detailValue: { fontSize: 13, color: "#1f2937" },
   notesLabel: {
     fontSize: 11,
     opacity: 0.6,
-    fontWeight: "600",
     marginBottom: 4,
   },
   notesValue: { fontSize: 12, opacity: 0.7, lineHeight: 16 },
@@ -470,7 +752,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: "700",
     marginBottom: 10,
     color: "#1f2937",
   },
@@ -485,7 +766,6 @@ const styles = StyleSheet.create({
   },
   itemMain: { flex: 1 },
   itemName: {
-    fontWeight: "600",
     fontSize: 13,
     marginBottom: 3,
     color: "#1f2937",
@@ -514,7 +794,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   itemTotal: {
-    fontWeight: "700",
     fontSize: 14,
     color: "#007AFF",
     minWidth: 60,
@@ -548,7 +827,7 @@ const styles = StyleSheet.create({
 
   actionsContainer: { gap: 8, marginBottom: 10 },
   actionButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
-  actionButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "600" },
+  actionButtonText: { color: "#ffffff", fontSize: 14 },
   generateButton: { backgroundColor: "#007AFF" },
   viewReceiptButton: { backgroundColor: "#059669" },
   returnButton: { backgroundColor: "#dc2626" },
@@ -572,7 +851,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
   },
-  retryButtonText: { color: "#ffffff", fontWeight: "600", fontSize: 14 },
+  retryButtonText: { color: "#ffffff", fontSize: 14 },
 
   modalOverlay: {
     flex: 1,
@@ -590,7 +869,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: "700",
     marginBottom: 10,
     textAlign: "center",
     color: "#1f2937",
@@ -603,15 +881,42 @@ const styles = StyleSheet.create({
   },
   modalButtons: { flexDirection: "row", gap: 10 },
   modalButton: {
-    flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
   },
   cancelMBtn: { backgroundColor: "#f3f4f6" },
-  cancelMBtnText: { color: "#374151", fontWeight: "600", fontSize: 14 },
+  cancelMBtnText: { color: "#374151", fontSize: 14 },
   retryMBtn: { backgroundColor: "#007AFF" },
-  retryMBtnText: { color: "#ffffff", fontWeight: "600", fontSize: 14 },
+  retryMBtnText: { color: "#ffffff", fontSize: 14 },
+  inquiryButton: { backgroundColor: "#7c3aed" },
+  voidButton: { backgroundColor: "#dc2626" },
+  voidSuccessBox: {
+    backgroundColor: "#d1fae5",
+    borderWidth: 1,
+    borderColor: "#6ee7b7",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+  },
+  voidSuccessText: { fontSize: 13, color: "#065f46", textAlign: "center" },
+  inquiryBody: { gap: 6 },
+  inquiryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+    gap: 8,
+  },
+  inquiryLabel: { fontSize: 12, color: "#6b7280", flex: 1 },
+  inquiryValue: {
+    fontSize: 12,
+    color: "#1f2937",
+    flex: 2,
+    textAlign: "right",
+  },
+  inquiryRaw: { fontSize: 11, color: "#374151", fontFamily: "monospace" },
   returnHintBox: {
     backgroundColor: "#fefce8",
     borderWidth: 1,

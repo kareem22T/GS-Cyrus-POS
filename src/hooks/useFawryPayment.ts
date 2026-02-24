@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  FawryEventEmitter,
-  FawryPaymentModule,
+    FawryEventEmitter,
+    FawryPaymentModule,
 } from "../../modules/FawryPaymentModule";
 import type {
-  ConnectionResponse,
-  InquiryRequest,
-  InquiryResponse,
-  PaymentRequest,
-  PaymentResponse,
-  RefundResponse,
-  VoidResponse,
+    ConnectionResponse,
+    InquiryRequest,
+    InquiryResponse,
+    PaymentRequest,
+    PaymentResponse,
+    RefundResponse,
+    VoidResponse,
 } from "../../types/fawry.types";
 
 interface UseFawryPaymentReturn {
@@ -36,7 +36,7 @@ interface UseFawryPaymentReturn {
   ) => Promise<PaymentResponse>;
 
   // Transaction management
-  voidTransaction: (fcrn: string) => Promise<VoidResponse>;
+  voidTransaction: (fcrn: string, orderId: string) => Promise<VoidResponse>;
   refundTransaction: (
     amount: number,
     orderId: string,
@@ -184,12 +184,15 @@ export const useFawryPayment = (): UseFawryPaymentReturn => {
   );
 
   const voidTransaction = useCallback(
-    async (fcrn: string): Promise<VoidResponse> => {
+    async (fcrn: string, orderId: string): Promise<VoidResponse> => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await FawryPaymentModule.voidTransaction(fcrn);
+        const response = await FawryPaymentModule.voidTransaction(
+          fcrn,
+          orderId,
+        );
 
         return response;
       } catch (err) {

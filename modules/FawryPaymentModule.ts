@@ -24,7 +24,7 @@ interface FawryPaymentNativeModule {
   initiateCashPayment(paymentData: PaymentRequest): Promise<PaymentResponse>;
 
   // Transaction management
-  voidTransaction(fcrn: string): Promise<VoidResponse>;
+  voidTransaction(fcrn: string, orderId: string): Promise<VoidResponse>;
   refundTransaction(
     fcrn: string,
     amount: number,
